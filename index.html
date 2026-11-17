@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OXT - Inspetor de HTML</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            color: var(--text-main);
+            letter-spacing: 1px;
+        }
+
+        .version {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 14px 18px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="url"]:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Barra de Progresso */
+        .progress-container {
+            display: none;
+            width: 100%;
+            background-color: var(--bg-color);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            border: 1px solid var(--border);
+            margin-top: 15px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary);
+            transition: width 0.1s linear;
+        }
+
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+            font-size: 0.75rem;
+            line-height: 20px;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Resultados */
+        .result-section {
+            display: none;
+            margin-top: 25px;
+            text-align: left;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .lines-count {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-copy {
+            background-color: var(--success);
+            flex: 1;
+        }
+        .btn-copy:hover {
+            background-color: #16a34a;
+        }
+
+        .btn-view {
+            background-color: #334155;
+            flex: 1;
+        }
+        .btn-view:hover {
+            background-color: #475569;
+        }
+
+        /* Área de visualização do código HTML */
+        .code-viewer {
+            display: none;
+            margin-top: 15px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            white-space: pre-wrap;
+            word-break: break-all;
+            text-align: left;
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>OXT</h1>
+        <div class="version">Versão 1.0</div>
+
+        <div class="input-group" id="inputSection">
+            <input type="url" id="urlInput" placeholder="Digite o link do site (ex: https://exemplo.com)" required>
+            <button id="startBtn" onclick="iniciarExtracao()">Começar Inspeção</button>
+        </div>
+
+        <!-- Barra de Progresso Customizada -->
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+            <div class="progress-text" id="progressText">0%</div>
+        </div>
+
+        <div class="error-msg" id="errorMsg">Ocorreu um erro ao pegar o HTML. Verifique o link e tente novamente.</div>
+
+        <!-- Seção de Resultados -->
+        <div class="result-section" id="resultSection">
+            <div class="lines-count" id="linesCountText">Linhas encontradas: 0</div>
+            <div class="actions">
+                <button class="btn-copy" onclick="copiarCodigo()">Copiar Código</button>
+                <button class="btn-view" onclick="alternarVisualizacao()">Ver HTML Inteiro</button>
+            </div>
+            <div class="code-viewer" id="codeViewer"></div>
+        </div>
+    </div>
+
+    <script>
+        let codigoHtmlGlobal = "";
+
+        function iniciarExtracao() {
+            let url = document.getElementById('urlInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.style.display = 'none';
+
+            if (!url) {
+                alert("Por favor, digite um link válido!");
+                return;
+            }
+
+            // Garante que a URL comece com http/https
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+
+            // Esconde o botão de começar e mostra a barra de progresso
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('urlInput').disabled = true;
+            
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            progressContainer.style.display = 'block';
+
+            // Simula animação de progresso fluida enquanto busca na rede
+            let progresso = 0;
+            const intervaloSimulacao = setInterval(() => {
+                if (progresso < 90) {
+                    progresso += Math.floor(Math.random() * 8) + 2;
+                    if (progresso > 90) progresso = 90;
+                    progressBar.style.width = progresso + '%';
+                    progressText.innerText = progresso + '%';
+                }
+            }, 100);
+
+            // Usando um proxy CORS público para buscar o site externo sem bloqueio de navegador
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+
+            fetch(proxyUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error("Erro na rede");
+                    return response.json();
+                })
+                .then(data => {
+                    clearInterval(intervaloSimulacao);
+                    
+                    // Completa a barra para 100% rapidamente
+                    progressBar.style.width = '100%';
+                    progressText.innerText = '100%';
+
+                    codigoHtmlGlobal = data.contents;
+
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        mostrarResultados(codigoHtmlGlobal);
+                    }, 400);
+                })
+                .catch(err => {
+                    clearInterval(intervaloSimulacao);
+                    progressContainer.style.display = 'none';
+                    document.getElementById('startBtn').style.display = 'block';
+                    document.getElementById('urlInput').disabled = false;
+                    errorMsg.style.display = 'block';
+                    console.error(err);
+                });
+        }
+
+        function mostrarResultados(html) {
+            // Conta a quantidade de linhas baseada nas quebras de linha (\n)
+            const totalLinhas = html.split('\n').length;
+
+            document.getElementById('linesCountText').innerText = `O código possui ${totalLinhas.toLocaleString('pt-BR')} linhas.`;
+            document.getElementById('codeViewer').innerText = html;
+            document.getElementById('resultSection').style.display = 'block';
+        }
+
+        function copiarCodigo() {
+            navigator.clipboard.writeText(codigoHtmlGlobal).then(() => {
+                const btnCopy = document.querySelector('.btn-copy');
+                btnCopy.innerText = "Copiado! ✓";
+                setTimeout(() => {
+                    btnCopy.innerText = "Copiar Código";
+                }, 2000);
+            }).catch(err => {
+                alert("Erro ao copiar o código.");
+            });
+        }
+
+        function alternarVisualizacao() {
+            const viewer = document.getElementById('codeViewer');
+            const btnView = document.querySelector('.btn-view');
+
+            if (viewer.style.display === 'block') {
+                viewer.style.display = 'none';
+                btnView.innerText = "Ver HTML Inteiro";
+            } else {
+                viewer.style.display = 'block';
+                btnView.innerText = "Esconder HTML";
+            }
+        }
+    </script>
+</body>
+</html>
