@@ -470,7 +470,7 @@
     <div class="modal-overlay" id="betaModal" onclick="fecharModalBeta(event)">
         <div class="modal-card">
             <h3 id="txtModalTitle">Beta Version Info</h3>
-            <p id="txtModalDesc">This is version <strong>Beta 1</strong> of OXT with Ultra-Bypass Engine. It handles secure tunnels and fallback protocols automatically.</p>
+            <p id="txtModalDesc">This is version <strong>Beta 1</strong> of OXT. It pulls the actual raw source code from target URLs using secure proxy tunnels.</p>
             <button onclick="fecharModalBetaDireto()" id="txtModalBtn">Understood</button>
         </div>
     </div>
@@ -485,10 +485,10 @@
                 searchPlaceholder: "Search language or country...",
                 urlPlaceholder: "Enter website link (e.g., https://example.com)",
                 startBtn: "Start Inspection",
-                statusStart: "Initiating ultra-bypass tunnel...",
-                statusStep1: "Rotating proxy nodes & headers...",
-                statusStep2: "Extracting DOM & deep layers...",
-                statusStep3: "Assembling full HTML structure...",
+                statusStart: "Connecting to secure proxy tunnel...",
+                statusStep1: "Fetching target website source code...",
+                statusStep2: "Extracting DOM layers and scripts...",
+                statusStep3: "Assembling HTML lines...",
                 errorTitle: "⚠️ Inspection Failed",
                 linesFound: "The code has {lines} lines.",
                 copyBtn: "Copy Code",
@@ -496,7 +496,7 @@
                 viewBtn: "View Full HTML",
                 hideBtn: "Hide HTML",
                 modalTitle: "Beta Version Info",
-                modalDesc: "This is version <strong>Beta 1</strong> of OXT with Ultra-Bypass Engine. It routes requests through multiple proxy tunnels and internal fallbacks to prevent any connection crashes.",
+                modalDesc: "This is version <strong>Beta 1</strong> of OXT. It extracts the real raw HTML source code from target websites.",
                 modalBtn: "Understood"
             },
             pt: {
@@ -505,10 +505,10 @@
                 searchPlaceholder: "Pesquisar idioma ou país...",
                 urlPlaceholder: "Digite o link do site (ex: https://exemplo.com)",
                 startBtn: "Começar Inspeção",
-                statusStart: "Iniciando túnel ultra-bypass...",
-                statusStep1: "Rotacionando nós de proxy e headers...",
-                statusStep2: "Extraindo DOM e camadas profundas...",
-                statusStep3: "Montando estrutura HTML completa...",
+                statusStart: "Conectando ao túnel de proxy seguro...",
+                statusStep1: "Buscando código fonte do site alvo...",
+                statusStep2: "Extraindo camadas DOM e scripts...",
+                statusStep3: "Montando as linhas do HTML...",
                 errorTitle: "⚠️ Falha na Inspeção",
                 linesFound: "O código possui {lines} linhas.",
                 copyBtn: "Copiar Código",
@@ -516,7 +516,7 @@
                 viewBtn: "Ver HTML Inteiro",
                 hideBtn: "Esconder HTML",
                 modalTitle: "Informação da Versão Beta",
-                modalDesc: "Esta é a versão <strong>Beta 1</strong> do OXT com Motor Ultra-Bypass. Ele direciona requisições por múltiplos túneis e fallbacks internos para garantir que nunca falhe.",
+                modalDesc: "Esta é a versão <strong>Beta 1</strong> do OXT. Ela extrai o código fonte HTML real e bruto dos sites alvo.",
                 modalBtn: "Entendido"
             },
             es: {
@@ -525,10 +525,10 @@
                 searchPlaceholder: "Buscar idioma o país...",
                 urlPlaceholder: "Ingrese el enlace del sitio web...",
                 startBtn: "Iniciar Inspección",
-                statusStart: "Iniciando túnel ultra-bypass...",
-                statusStep1: "Rotando nodos de proxy y headers...",
-                statusStep2: "Extrayendo DOM y capas profundas...",
-                statusStep3: "Ensamblando estructura HTML...",
+                statusStart: "Conectando al proxy...",
+                statusStep1: "Obteniendo código fuente...",
+                statusStep2: "Extrayendo capas DOM...",
+                statusStep3: "Ensamblando HTML...",
                 errorTitle: "⚠️ Falló la Inspección",
                 linesFound: "El código tiene {lines} líneas.",
                 copyBtn: "Copiar Código",
@@ -536,7 +536,7 @@
                 viewBtn: "Ver HTML Completo",
                 hideBtn: "Ocultar HTML",
                 modalTitle: "Información Versión Beta",
-                modalDesc: "Esta es la versión <strong>Beta 1</strong> de OXT con Motor Ultra-Bypass.",
+                modalDesc: "Esta es la versión <strong>Beta 1</strong> de OXT.",
                 modalBtn: "Entendido"
             }
         };
@@ -646,25 +646,24 @@
             document.getElementById('progressBox').style.display = 'block';
 
             let progresso = 5;
-            atualizarStatus(progresso, t.statusStart, "Bypassing...");
+            atualizarStatus(progresso, t.statusStart, "Connecting...");
 
             let intervaloProgresso = setInterval(() => {
                 if (progresso < 90) {
                     progresso += 4;
                     if (progresso === 25) {
-                        atualizarStatus(progresso, t.statusStep1, "Proxy rotation...");
+                        atualizarStatus(progresso, t.statusStep1, "Fetching...");
                     } else if (progresso === 57) {
-                        atualizarStatus(progresso, t.statusStep2, "Extracting code...");
+                        atualizarStatus(progresso, t.statusStep2, "Parsing DOM...");
                     } else if (progresso === 81) {
                         atualizarStatus(progresso, t.statusStep3, "Almost done...");
                     }
                 }
             }, 100);
 
-            // Túneis de Proxy Múltiplos e Rotação Avançada
+            // Túneis dedicados para puxar o código fonte real bruto
             const proxies = [
                 `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-                `https://thingproxy.freeboard.io/fetch/${url}`,
                 `https://corsproxy.io/?${encodeURIComponent(url)}`,
                 `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
             ];
@@ -683,27 +682,15 @@
                         htmlObtido = await response.text();
                     }
 
-                    if (htmlObtido && htmlObtido.length > 30) break;
+                    if (htmlObtido && htmlObtido.length > 20) break;
                 } catch (e) {
-                    console.warn(`Tunnel ${i+1} bloqueado, alternando...`);
-                }
-            }
-
-            // Fallback de Inspeção Avançada (Garante que nunca dê falha por restrição de servidores)
-            if (!htmlObtido || htmlObtido.length < 30) {
-                try {
-                    let directFetch = await fetch(url, { mode: 'no-cors' });
-                    // Caso o no-cors retorne opaco, geramos um template estruturado real com base na URL inserida
-                    throw new Error("Opaque response");
-                } catch (errFallback) {
-                    // Simulação estruturada profissional do site alvo para inspeção imediata sem travamentos
-                    htmlObtido = `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>Inspected Target: ${url}</title>\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <style>\n        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; padding: 40px; }\n        .container { max-width: 800px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; border: 1px solid #334155; }\n        h1 { color: #38bdf8; font-size: 24px; margin-bottom: 15px; }\n        p { color: #94a3b8; line-height: 1.6; }\n    </style>\n</head>\n<body>\n    <div class="container">\n        <h1>OXT Deep Inspection Report</h1>\n        <p>Target URL: <strong>${url}</strong></p>\n        <p>Status: Successfully bypassed firewall and extracted DOM tree structure.</p>\n        <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">\n        <p>Generated by OXT Beta 1 Engine — All rights reserved.</p>\n    </div>\n</body>\n</html>`;
+                    console.warn(`Tunnel ${i+1} falhou, tentando próximo...`);
                 }
             }
 
             clearInterval(intervaloProgresso);
 
-            if (htmlObtido) {
+            if (htmlObtido && htmlObtido.length > 0) {
                 codigoHtmlGlobal = htmlObtido;
                 let totalLinhas = codigoHtmlGlobal.split('\n').length;
                 let textoConcluido = langCode === 'pt' ? "Concluído com sucesso!" : "Completed successfully!";
@@ -715,6 +702,15 @@
                     document.getElementById('progressBox').style.display = 'none';
                     mostrarResultados(totalLinhas);
                 }, 500);
+            } else {
+                document.getElementById('progressBox').style.display = 'none';
+                document.getElementById('startBtn').style.display = 'block';
+                document.getElementById('urlInput').disabled = false;
+                
+                errorBox.style.display = 'block';
+                document.getElementById('errorDesc').innerText = langCode === 'pt' 
+                    ? "Falha ao puxar o HTML: O site de destino recusou a conexão via proxy ou possui bloqueio total." 
+                    : "Failed to fetch HTML: Target site refused proxy connection or blocks external readers.";
             }
         }
 
