@@ -210,14 +210,14 @@
         <!-- Chat Container -->
         <div class="chat-container" id="chatContainer">
             <div class="message ai">
-                Hello! I am OXT AI. Type what website you want to build (e.g., "Create a button").
+                Hello! I am OXT AI. Tell me what website or app you want to build, and I will code it for you!
             </div>
         </div>
 
         <!-- Input de Envio -->
         <div class="input-area">
             <div class="input-wrapper">
-                <textarea id="promptInput" placeholder="Ask OXT AI to build a website..." rows="1" onkeydown="checarEnter(event)"></textarea>
+                <textarea id="promptInput" placeholder="Ask OXT AI to build any website..." rows="1" onkeydown="checarEnter(event)"></textarea>
                 <button class="send-btn" onclick="enviarMensagem()">Send</button>
             </div>
         </div>
@@ -385,12 +385,12 @@
             rtdb.ref(`users_data/${usuarioAtual}/chats/${chatIdAtual}/title`).set(prompt.slice(0, 25));
             carregarListaDeConversas();
 
-            // Feedback instantâneo na tela informando o andamento
-            let loadingId = adicionarMensagemDOM("OXT AI: I am already creating your website... ⏳", 'ai');
+            // Feedback dinâmico e animado do que a IA está processando
+            let loadingId = adicionarMensagemDOM("OXT AI: Analyzing your request... ⏳", 'ai');
 
             setTimeout(() => {
                 let el = document.getElementById(loadingId);
-                if(el) el.innerText = "OXT AI: Analyzing elements and designing layout... 🎨";
+                if(el) el.innerText = "OXT AI: Designing layout and writing code... 💻";
             }, 1000);
 
             try {
@@ -402,7 +402,7 @@
                             {
                                 role: "user",
                                 parts: [
-                                    { text: "System rule: You are OXT AI, an expert website creator engine. If user says 'create a button' or similar simple request, build a clean white background with a normal centered button. If user asks for custom styles or layouts, design them cleanly. Return ONLY valid clean HTML code without markdown blocks." },
+                                    { text: "System rule: You are OXT AI, an expert professional website builder. Your main job is to create a fully functional, responsive HTML/CSS/JS website or application precisely based on what the user requests. If they ask for a store, code a store. If they ask for a login page, code a login page. Build exactly what is asked with clean styling. Return ONLY valid clean HTML code without markdown blocks." },
                                     { text: `User request: ${prompt}` }
                                 ]
                             }
@@ -415,7 +415,7 @@
                 let htmlLimpo = rawText.replace(/```html/g, '').replace(/```/g, '').trim();
 
                 if (!htmlLimpo || !htmlLimpo.includes('<!DOCTYPE html>')) {
-                    htmlLimpo = criarHtmlPadrao(prompt);
+                    htmlLimpo = criarHtmlDinamico(prompt);
                 }
 
                 let projectId = 'oxt_' + Math.random().toString(36).substr(2, 9);
@@ -432,7 +432,7 @@
 
             } catch (err) {
                 console.error(err);
-                let htmlLimpo = criarHtmlPadrao(prompt);
+                let htmlLimpo = criarHtmlDinamico(prompt);
                 let projectId = 'oxt_' + Math.random().toString(36).substr(2, 9);
 
                 await rtdb.ref(`projects/${projectId}`).set({
@@ -479,21 +479,27 @@
             chat.scrollTop = chat.scrollHeight;
         }
 
-        function criarHtmlPadrao(prompt) {
+        function criarHtmlDinamico(prompt) {
             return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OXT AI Website</title>
+    <title>${prompt}</title>
     <style>
-        body { background: #ffffff; color: #111827; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        button { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; }
-        button:hover { background: #1d4ed8; }
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }
+        .card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; max-width: 500px; width: 100%; }
+        h1 { color: #38bdf8; margin-bottom: 15px; }
+        p { color: #94a3b8; margin-bottom: 20px; }
+        .btn { background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    <button onclick="alert('Button clicked!')">Click Me</button>
+    <div class="card">
+        <h1>${prompt}</h1>
+        <p>This is your custom generated interface.</p>
+        <button class="btn" onclick="alert('Action executed!')">Interact</button>
+    </div>
 </body>
 </html>`;
         }
