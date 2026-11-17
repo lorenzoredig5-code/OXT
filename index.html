@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -15,6 +16,7 @@
             --border: #334155;
             --success: #22c55e;
             --error: #ef4444;
+            --beta-color: #f59e0b;
         }
 
         * {
@@ -46,11 +48,36 @@
             text-align: center;
         }
 
+        .header-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 5px;
+        }
+
         h1 {
             font-size: 2rem;
-            margin-bottom: 5px;
             color: var(--text-main);
             letter-spacing: 1px;
+        }
+
+        /* Botão / Tag Beta */
+        .beta-badge {
+            background-color: rgba(245, 158, 11, 0.15);
+            border: 1px solid var(--beta-color);
+            color: var(--beta-color);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .beta-badge:hover {
+            background-color: rgba(245, 158, 11, 0.3);
+            transform: scale(1.05);
         }
 
         .version {
@@ -104,7 +131,7 @@
             transform: scale(0.98);
         }
 
-        /* Barra de Progresso e Status */
+        /* Caixa de Progresso e Status */
         .progress-box {
             display: none;
             margin-top: 15px;
@@ -125,7 +152,7 @@
             height: 100%;
             width: 0%;
             background-color: var(--primary);
-            transition: width 0.15s ease;
+            transition: width 0.2s ease;
         }
 
         .progress-text {
@@ -148,7 +175,7 @@
             margin-top: 8px;
         }
 
-        /* Log de Erro Detalhado */
+        /* Log de Erro */
         .error-box {
             display: none;
             margin-top: 20px;
@@ -229,12 +256,59 @@
             word-break: break-all;
             text-align: left;
         }
+
+        /* Modal do Beta */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 25px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: scaleIn 0.3s ease-in-out;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-card h3 {
+            color: var(--beta-color);
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+        }
+
+        .modal-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>OXT</h1>
+        <div class="header-area">
+            <h1>OXT</h1>
+            <div class="beta-badge" onclick="abrirModalBeta()">Beta 1</div>
+        </div>
         <div class="version">Versão 1.0</div>
 
         <div class="input-group" id="inputSection">
@@ -250,7 +324,7 @@
             </div>
             <div class="status-details">
                 <span id="statusMessage">Iniciando requisição...</span>
-                <span id="timeLeft">Calculando tempo...</span>
+                <span id="timeLeft">Processando...</span>
             </div>
         </div>
 
@@ -271,8 +345,31 @@
         </div>
     </div>
 
+    <!-- Janela Modal do Beta -->
+    <div class="modal-overlay" id="betaModal" onclick="fecharModalBeta(event)">
+        <div class="modal-card">
+            <h3>Informação da Versão Beta</h3>
+            <p>Esta é a versão <strong>Beta 1</strong> do OXT. Como o sistema está em fase de desenvolvimento ativo e processa códigos pesados (mesmo com mais de 10.000 linhas), você ainda pode encontrar alguns bugs visuais ou instabilidades dependendo do site inspecionado.</p>
+            <button onclick="fecharModalBetaDireto()">Entendido</button>
+        </div>
+    </div>
+
     <script>
         let codigoHtmlGlobal = "";
+
+        function abrirModalBeta() {
+            document.getElementById('betaModal').style.display = 'flex';
+        }
+
+        function fecharModalBeta(event) {
+            if (event.target.id === 'betaModal') {
+                document.getElementById('betaModal').style.display = 'none';
+            }
+        }
+
+        function fecharModalBetaDireto() {
+            document.getElementById('betaModal').style.display = 'none';
+        }
 
         function atualizarStatus(porcentagem, mensagem, tempoRestante) {
             document.getElementById('progressBar').style.width = porcentagem + '%';
@@ -298,70 +395,63 @@
                 url = 'https://' + url;
             }
 
-            // Esconde o botão e prepara a tela de progresso
+            // Esconde o botão e prepara a tela de progresso contínuo
             document.getElementById('startBtn').style.display = 'none';
             document.getElementById('urlInput').disabled = true;
             document.getElementById('progressBox').style.display = 'block';
 
-            let tempoInicio = Date.now();
-            let progresso = 10;
+            let progresso = 5;
+            atualizarStatus(progresso, "Conectando ao proxy de alta capacidade...", "Processando...");
 
-            atualizarStatus(progresso, "Conectando ao proxy seguro...", "Estimativa: ~3s");
-
-            let intervalo = setInterval(() => {
-                if (progresso < 85) {
-                    progresso += 15;
-                    
-                    if (progresso === 25) {
-                        atualizarStatus(progresso, "Enviando pacotes de requisição...", "Estimativa: ~2s");
-                    } else if (progresso === 40) {
-                        atualizarStatus(progresso, "Acessando servidores externos...", "Estimativa: ~2s");
-                    } else if (progresso === 55) {
-                        atualizarStatus(progresso, "Analisando e varrendo erros no HTML...", "Estimativa: ~1s");
-                    } else if (progresso === 70) {
-                        atualizarStatus(progresso, "Baixando o código fonte...", "Estimativa: ~1s");
-                    } else if (progresso === 85) {
-                        atualizarStatus(progresso, "Quase lá, estruturando dados...", "Estimativa: quase pronto");
+            // Barra avançando de forma fluida para suportar arquivos grandes sem travar em 90%
+            let intervaloProgresso = setInterval(() => {
+                if (progresso < 95) {
+                    progresso += 2;
+                    if (progresso === 20) {
+                        atualizarStatus(progresso, "Buscando estrutura de grande porte...", "Baixando blocos...");
+                    } else if (progresso === 50) {
+                        atualizarStatus(progresso, "Varrendo milhares de linhas e verificando integridade...", "Quase na metade...");
+                    } else if (progresso === 75) {
+                        atualizarStatus(progresso, "Organizando códigos e blocos extensos...", "Finalizando leitura...");
+                    } else if (progresso === 90) {
+                        atualizarStatus(progresso, "Quase pronto, compilando resultado...", "Aguarde...");
                     }
                 }
-            }, 350);
+            }, 120);
 
+            // Proxy otimizado para lidar com arquivos massivos
             const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
 
             fetch(proxyUrl)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`Erro HTTP: ${response.status} - O servidor recusou a conexão.`);
+                        throw new Error(`Erro HTTP: ${response.status} - O servidor recusou ou bloqueou a requisição.`);
                     }
                     return response.json();
                 })
                 .then(data => {
-                    clearInterval(intervalo);
+                    clearInterval(intervaloProgresso);
 
                     if (!data.contents) {
-                        throw new Error("O servidor retornou um conteúdo vazio ou o site bloqueou o acesso.");
+                        throw new Error("O conteúdo retornado está vazio ou o site possui forte proteção anti-bot.");
                     }
 
                     codigoHtmlGlobal = data.contents;
                     let totalLinhas = codigoHtmlGlobal.split('\n').length;
 
-                    // Calcula o tempo total levado
-                    let tempoGasto = ((Date.now() - tempoInicio) / 1000).toFixed(1);
-
-                    atualizarStatus(100, "Concluído com sucesso!", `Tempo total: ${tempoGasto}s (${totalLinhas} linhas)`);
+                    atualizarStatus(100, "Concluído com sucesso!", `${totalLinhas.toLocaleString('pt-BR')} linhas carregadas!`);
 
                     setTimeout(() => {
                         document.getElementById('progressBox').style.display = 'none';
                         mostrarResultados(totalLinhas);
-                    }, 600);
+                    }, 500);
                 })
                 .catch(err => {
-                    clearInterval(intervalo);
+                    clearInterval(intervaloProgresso);
                     document.getElementById('progressBox').style.display = 'none';
                     document.getElementById('startBtn').style.display = 'block';
                     document.getElementById('urlInput').disabled = false;
                     
-                    // Exibe o Log de Erro detalhado
                     errorBox.style.display = 'block';
                     document.getElementById('errorDesc').innerText = err.message || "Erro desconhecido ao tentar capturar o link.";
                     console.error(err);
