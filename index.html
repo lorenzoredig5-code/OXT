@@ -10,7 +10,8 @@
     <style>
         :root {
             --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --sidebar-bg: #1e293b;
+            --chat-bg: #0b0f19;
             --primary: #6366f1;
             --primary-hover: #4f46e5;
             --text-main: #f8fafc;
@@ -18,7 +19,6 @@
             --border: #334155;
             --success: #22c55e;
             --error: #ef4444;
-            --beta-color: #f59e0b;
         }
 
         * {
@@ -31,15 +31,12 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
+            overflow: hidden;
         }
 
-        /* Tela de Autenticação (Login / Cadastro com Nome e Senha) */
+        /* Tela de Autenticação */
         .auth-overlay {
             display: flex;
             position: fixed;
@@ -55,7 +52,7 @@
         }
 
         .auth-card {
-            background-color: var(--card-bg);
+            background-color: var(--sidebar-bg);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 30px;
@@ -65,240 +62,171 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
 
-        .auth-card h2 {
-            margin-bottom: 8px;
-            color: var(--text-main);
-            font-size: 1.5rem;
-        }
-
-        .auth-card p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-bottom: 20px;
-        }
-
+        .auth-card h2 { margin-bottom: 8px; font-size: 1.5rem; }
+        .auth-card p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
         .auth-input {
-            width: 100%;
-            padding: 12px 16px;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text-main);
-            font-size: 0.95rem;
-            outline: none;
-            margin-bottom: 12px;
+            width: 100%; padding: 12px 16px; background-color: var(--bg-color);
+            border: 1px solid var(--border); border-radius: 10px; color: var(--text-main);
+            font-size: 0.95rem; outline: none; margin-bottom: 12px;
         }
+        .auth-input:focus { border-color: var(--primary); }
 
-        .auth-input:focus {
-            border-color: var(--primary);
-        }
-
-        .container {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            width: 100%;
-            max-width: 800px;
-            height: 90vh;
+        /* Layout Principal com Sidebar (Estilo Gemini) */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .header-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            color: var(--text-main);
-        }
-
-        .user-info {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-logout {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid var(--error);
-            color: var(--error);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-logout:hover {
-            background: rgba(239, 68, 68, 0.3);
-        }
-
-        /* Área de Chat (Conversa estilo IA) */
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
+            padding: 15px;
             gap: 15px;
-            padding: 10px;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            margin-bottom: 15px;
+        }
+
+        .btn-new-chat {
+            background-color: var(--primary);
+            color: white; border: none; padding: 12px; border-radius: 10px;
+            font-weight: 600; cursor: pointer; text-align: left;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .btn-new-chat:hover { background-color: var(--primary-hover); }
+
+        .chat-history-list {
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
+        }
+
+        .history-item {
+            padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+            color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: background 0.2s, color 0.2s;
+        }
+        .history-item:hover, .history-item.active {
+            background-color: rgba(255, 255, 155, 0.05); color: var(--text-main);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid var(--border);
+            padding-top: 10px; display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; background-color: var(--bg-color);
+            height: 100vh; position: relative;
+        }
+
+        .top-header {
+            padding: 15px 25px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--sidebar-bg);
+        }
+
+        .access-code-bar {
+            display: flex; gap: 8px; align-items: center;
+        }
+        .access-code-bar input {
+            padding: 6px 10px; background: var(--bg-color); border: 1px solid var(--border);
+            border-radius: 6px; color: white; font-size: 0.85rem; outline: none; width: 140px;
+        }
+
+        /* Área do Chat Principal */
+        .chat-container {
+            flex: 1; overflow-y: auto; padding: 25px; display: flex;
+            flex-direction: column; gap: 20px; max-width: 900px; width: 100%; margin: 0 auto;
         }
 
         .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            word-break: break-word;
+            max-width: 85%; padding: 15px 20px; border-radius: 14px; font-size: 0.95rem; line-height: 1.5; word-break: break-word;
         }
-
-        /* Mensagem do Usuário (Direita) */
-        .message.user {
-            background-color: var(--primary);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 2px;
-        }
-
-        /* Mensagem da OXT AI (Esquerda) */
-        .message.ai {
-            background-color: #334155;
-            color: var(--text-main);
-            align-self: flex-start;
-            border-bottom-left-radius: 2px;
-        }
+        .message.user { background-color: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 3px; }
+        .message.ai { background-color: var(--sidebar-bg); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 3px; border: 1px solid var(--border); }
 
         .code-snippet {
-            background: #0f172a;
-            border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: #38bdf8;
-            max-height: 150px;
-            overflow-y: auto;
-            margin-top: 8px;
-            text-align: left;
-            white-space: pre-wrap;
+            background: var(--chat-bg); border: 1px solid var(--border); padding: 12px;
+            border-radius: 8px; font-family: monospace; font-size: 0.82rem; color: #38bdf8;
+            max-height: 180px; overflow-y: auto; margin-top: 12px; text-align: left; white-space: pre-wrap;
         }
 
-        .chat-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
+        .chat-actions { display: flex; gap: 10px; margin-top: 12px; }
         .chat-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
+            background: var(--primary); color: white; border: none; padding: 8px 14px;
+            border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block;
         }
         .chat-btn:hover { background: var(--primary-hover); }
-
         .chat-btn-success { background: var(--success); }
         .chat-btn-success:hover { background: #16a34a; }
 
-        /* Barra de Input de Envio */
-        .input-chat-box {
-            display: flex;
-            gap: 10px;
+        /* Input Inferior */
+        .input-area {
+            padding: 20px 25px; background-color: var(--sidebar-bg); border-top: 1px solid var(--border);
+            display: flex; justify-content: center;
         }
-
+        .input-wrapper {
+            max-width: 800px; width: 100%; display: flex; gap: 10px;
+            background: var(--bg-color); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px;
+        }
         textarea {
-            flex: 1;
-            padding: 12px 15px;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text-main);
-            font-size: 0.95rem;
-            outline: none;
-            resize: none;
-            height: 50px;
+            flex: 1; background: transparent; border: none; color: var(--text-main);
+            font-size: 0.95rem; outline: none; resize: none; height: 24px; max-height: 120px; padding: 4px;
         }
-
-        textarea:focus { border-color: var(--primary); }
-
         button.send-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 0 20px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
+            background-color: var(--primary); color: white; border: none; border-radius: 8px;
+            padding: 0 16px; font-weight: 600; cursor: pointer; height: 36px; transition: background 0.2s;
         }
         button.send-btn:hover { background-color: var(--primary-hover); }
     </style>
 </head>
 <body>
 
-    <!-- Tela de Login / Cadastro Automático -->
+    <!-- Tela de Autenticação -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-card">
-            <h2>OXT AI Account</h2>
-            <p>Enter your username and password to log in or create your account automatically:</p>
+            <h2>OXT AI Login</h2>
+            <p>Enter your username and password to access your chats and saved websites:</p>
             <input type="text" class="auth-input" id="usernameInput" placeholder="Username">
             <input type="password" class="auth-input" id="passwordInput" placeholder="Password">
             <button onclick="autenticarUsuario()" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer;">Continue</button>
         </div>
     </div>
 
-    <div class="container">
-        <div class="header-area">
-            <div class="logo-area">
-                <h1>OXT AI</h1>
-            </div>
-            <div class="user-info">
-                <span>User: <strong id="displayUser"></strong></span>
-                <button class="btn-logout" onclick="fazerLogout()">Logout</button>
+    <!-- Sidebar com Histórico e Botão Nova Conversa (Estilo Gemini) -->
+    <div class="sidebar">
+        <button class="btn-new-chat" onclick="criarNovaConversa()">➕ New Chat</button>
+        <div class="chat-history-list" id="chatHistoryList">
+            <!-- Os chats salvos aparecem aqui -->
+        </div>
+        <div class="sidebar-footer">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">User: <strong id="displayUser" style="color: white;"></strong></div>
+            <button onclick="fazerLogout()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--error); color: var(--error); padding: 6px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Logout</button>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="top-header">
+            <h1 style="font-size: 1.2rem;">OXT AI Website Builder</h1>
+            <div class="access-code-bar">
+                <input type="text" id="accessCodeInput" placeholder="Enter Project ID...">
+                <button class="chat-btn" onclick="carregarSitePorCodigo()" style="padding: 6px 12px; font-size: 0.8rem;">Open Code</button>
             </div>
         </div>
 
-        <!-- Janela de Conversa (Chat Interface) -->
+        <!-- Chat Container -->
         <div class="chat-container" id="chatContainer">
             <div class="message ai">
-                Hello! I am OXT AI. Tell me what website you want me to create, and I will code it instantly for you.
+                Hello! I am OXT AI. Tell me what website you want to build (e.g. "Create a white background with a button" or customize it however you like).
             </div>
         </div>
 
         <!-- Input de Mensagem -->
-        <div class="input-chat-box">
-            <textarea id="promptInput" placeholder="Type what website you want to create..." onkeydown="checarEnter(event)"></textarea>
-            <button class="send-btn" onclick="enviarMensagem()">Send</button>
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea id="promptInput" placeholder="Ask OXT AI to build or modify a website..." rows="1" onkeydown="checarEnter(event)"></textarea>
+                <button class="send-btn" onclick="enviarMensagem()">Send</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURAÇÃO DO FIREBASE REALTIME DATABASE
+        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBJf2YuT_MTutaIQD1538aewftKj_hr_rQ",
             authDomain: "radio-43909.firebaseapp.com",
@@ -315,13 +243,13 @@
 
         const GEMINI_API_KEY = "AQ.Ab8RN6Ki0P7LukRelWJptkvqZ5VaaxDIytSwG_k0_3FYE_TNwQ";
         let usuarioAtual = localStorage.getItem('oxt_username') || null;
+        let chatIdAtual = localStorage.getItem('oxt_active_chat') || null;
 
-        // Gerenciamento de Autenticação Simples (Nome e Senha)
         window.addEventListener('DOMContentLoaded', () => {
             if (usuarioAtual) {
                 document.getElementById('authOverlay').style.display = 'none';
                 document.getElementById('displayUser').innerText = usuarioAtual;
-                carregarHistoricoDoFirebase(usuarioAtual);
+                inicializarApp();
             } else {
                 document.getElementById('authOverlay').style.display = 'flex';
             }
@@ -331,23 +259,18 @@
             let user = document.getElementById('usernameInput').value.trim().toLowerCase();
             let pass = document.getElementById('passwordInput').value.trim();
 
-            if (!user || !pass) {
-                alert("Please enter both username and password!");
-                return;
-            }
+            if (!user || !pass) { alert("Enter username and password!"); return; }
 
             let userRef = rtdb.ref('users/' + user);
             userRef.once('value', async (snapshot) => {
                 if (snapshot.exists()) {
-                    let data = snapshot.val();
-                    if (data.password === pass) {
+                    if (snapshot.val().password === pass) {
                         salvarSessao(user);
                     } else {
-                        alert("Incorrect password for this username!");
+                        alert("Incorrect password!");
                     }
                 } else {
-                    // Cria conta nova automaticamente se não existir
-                    await userRef.set({ password: pass, createdAt: new Date().toISOString() });
+                    await userRef.set({ password: pass });
                     salvarSessao(user);
                 }
             });
@@ -358,12 +281,93 @@
             usuarioAtual = user;
             document.getElementById('authOverlay').style.display = 'none';
             document.getElementById('displayUser').innerText = user;
-            carregarHistoricoDoFirebase(user);
+            inicializarApp();
         }
 
         function fazerLogout() {
             localStorage.removeItem('oxt_username');
+            localStorage.removeItem('oxt_active_chat');
             location.reload();
+        }
+
+        function inicializarApp() {
+            carregarListaDeConversas();
+        }
+
+        // Gerenciamento de Conversas (Chats)
+        function criarNovaConversa() {
+            chatIdAtual = 'chat_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('oxt_active_chat', chatIdAtual);
+            
+            // Salva conversa vazia no Firebase
+            rtdb.ref(`users_data/${usuarioAtual}/chats/${chatIdAtual}`).set({
+                title: "New Chat",
+                createdAt: new Date().toISOString()
+            });
+
+            document.getElementById('chatContainer').innerHTML = `
+                <div class="message ai">New chat started! What website would you like me to build?</div>
+            `;
+            carregarListaDeConversas();
+        }
+
+        function carregarListaDeConversas() {
+            rtdb.ref(`users_data/${usuarioAtual}/chats`).once('value', (snapshot) => {
+                let listEl = document.getElementById('chatHistoryList');
+                listEl.innerHTML = '';
+
+                if (!snapshot.exists()) {
+                    criarNovaConversa();
+                    return;
+                }
+
+                let chats = snapshot.val();
+                let keys = Object.keys(chats).reverse();
+
+                if (!chatIdAtual || !chats[chatIdAtual]) {
+                    chatIdAtual = keys[0];
+                    localStorage.setItem('oxt_active_chat', chatIdAtual);
+                }
+
+                keys.forEach(id => {
+                    let chatData = chats[id];
+                    let div = document.createElement('div');
+                    div.className = `history-item ${id === chatIdAtual ? 'active' : ''}`;
+                    div.innerText = chatData.title || "Chat";
+                    div.onclick = () => {
+                        chatIdAtual = id;
+                        localStorage.setItem('oxt_active_chat', chatIdAtual);
+                        carregarMensagensDoChat(id);
+                        carregarListaDeConversas();
+                    };
+                    listEl.appendChild(div);
+                });
+
+                carregarMensagensDoChat(chatIdAtual);
+            });
+        }
+
+        function carregarMensagensDoChat(chatId) {
+            let container = document.getElementById('chatContainer');
+            container.innerHTML = '';
+
+            rtdb.ref(`users_data/${usuarioAtual}/chats/${chatId}/messages`).once('value', (snapshot) => {
+                if (!snapshot.exists()) {
+                    container.innerHTML = `<div class="message ai">Hello! Tell me what website you want to create.</div>`;
+                    return;
+                }
+
+                let msgs = snapshot.val();
+                Object.keys(msgs).forEach(msgKey => {
+                    let m = msgs[msgKey];
+                    if (m.sender === 'user') {
+                        adicionarMensagemDOM(m.text, 'user');
+                    } else {
+                        let msgId = adicionarMensagemDOM("", 'ai');
+                        atualizarMensagemDOMAI(msgId, m.prompt, m.html, m.projectId);
+                    }
+                });
+            });
         }
 
         function checarEnter(e) {
@@ -378,12 +382,21 @@
             if (!prompt) return;
 
             document.getElementById('promptInput').value = '';
-            adicionarMensagemChat(prompt, 'user');
+            adicionarMensagemDOM(prompt, 'user');
 
-            // Mensagem de loading da IA
-            let loadingId = adicionarMensagemChat("OXT AI is creating your website...", 'ai');
+            // Salva mensagem do usuário no Firebase
+            rtdb.ref(`users_data/${usuarioAtual}/chats/${chatIdAtual}/messages`).push({
+                sender: 'user', text: prompt, time: new Date().toISOString()
+            });
+
+            // Atualiza título do chat se for o primeiro prompt
+            rtdb.ref(`users_data/${usuarioAtual}/chats/${chatIdAtual}/title`).set(prompt.slice(0, 25));
+            carregarListaDeConversas();
+
+            let loadingId = adicionarMensagemDOM("OXT AI is coding your website...", 'ai');
 
             try {
+                // Gemini gerencia a criação customizável do site (fundo branco, botões, ou layouts avançados se pedido)
                 let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -392,8 +405,8 @@
                             {
                                 role: "user",
                                 parts: [
-                                    { text: "System rule: You are OXT AI. Regardless of user input (even random text, math, or chatter), ignore casual text and generate complete valid responsive HTML/CSS/JS website code. Return ONLY clean HTML code." },
-                                    { text: `Create website for: ${prompt}` }
+                                    { text: "System rule: You are OXT AI, a flexible website creator engine. If user asks for simple things like 'create a button', make a clean white background with a centered button. If user asks for custom layouts, colors, or styles, follow their instructions precisely. Return ONLY valid clean HTML code without markdown blocks." },
+                                    { text: `User website request: ${prompt}` }
                                 ]
                             }
                         ]
@@ -405,36 +418,42 @@
                 let htmlLimpo = rawText.replace(/```html/g, '').replace(/```/g, '').trim();
 
                 if (!htmlLimpo || !htmlLimpo.includes('<!DOCTYPE html>')) {
-                    htmlLimpo = criarHtmlFallback(prompt);
+                    htmlLimpo = criarHtmlPadrao(prompt);
                 }
 
+                // ID Único Fixado para este site específico
                 let projectId = 'oxt_' + Math.random().toString(36).substr(2, 9);
-                
-                // Salva no Realtime Database do Firebase na pasta do usuário
-                await rtdb.ref(`users_data/${usuarioAtual}/projects/${projectId}`).set({
-                    prompt: prompt,
-                    html: htmlLimpo,
-                    createdAt: new Date().toISOString()
+
+                // Salva o projeto globalmente para poder abrir por código a qualquer momento
+                await rtdb.ref(`projects/${projectId}`).set({
+                    prompt: prompt, html: htmlLimpo, createdAt: new Date().toISOString()
                 });
 
-                atualizarMensagemAI(loadingId, prompt, htmlLimpo, projectId);
+                // Salva a mensagem da IA no chat atual
+                await rtdb.ref(`users_data/${usuarioAtual}/chats/${chatIdAtual}/messages`).push({
+                    sender: 'ai', prompt: prompt, html: htmlLimpo, projectId: projectId, time: new Date().toISOString()
+                });
+
+                atualizarMensagemDOMAI(loadingId, prompt, htmlLimpo, projectId);
 
             } catch (err) {
                 console.error(err);
-                let htmlLimpo = criarHtmlFallback(prompt);
+                let htmlLimpo = criarHtmlPadrao(prompt);
                 let projectId = 'oxt_' + Math.random().toString(36).substr(2, 9);
-                
-                await rtdb.ref(`users_data/${usuarioAtual}/projects/${projectId}`).set({
-                    prompt: prompt,
-                    html: htmlLimpo,
-                    createdAt: new Date().toISOString()
+
+                await rtdb.ref(`projects/${projectId}`).set({
+                    prompt: prompt, html: htmlLimpo, createdAt: new Date().toISOString()
                 });
 
-                atualizarMensagemAI(loadingId, prompt, htmlLimpo, projectId);
+                await rtdb.ref(`users_data/${usuarioAtual}/chats/${chatIdAtual}/messages`).push({
+                    sender: 'ai', prompt: prompt, html: htmlLimpo, projectId: projectId, time: new Date().toISOString()
+                });
+
+                atualizarMensagemDOMAI(loadingId, prompt, htmlLimpo, projectId);
             }
         }
 
-        function adicionarMensagemChat(texto, remetente) {
+        function adicionarMensagemDOM(texto, remetente) {
             let chat = document.getElementById('chatContainer');
             let div = document.createElement('div');
             let msgId = 'msg_' + Math.random().toString(36).substr(2, 9);
@@ -446,7 +465,7 @@
             return msgId;
         }
 
-        function atualizarMensagemAI(msgId, prompt, html, projectId) {
+        function atualizarMensagemDOMAI(msgId, prompt, html, projectId) {
             let msgEl = document.getElementById(msgId);
             if (!msgEl) return;
 
@@ -454,66 +473,60 @@
             let blobUrl = URL.createObjectURL(blob);
 
             msgEl.innerHTML = `
-                Website created successfully for: <strong>${prompt}</strong>
+                Website created for: <strong>${prompt}</strong><br>
+                Project ID Code: <code style="color: #38bdf8; font-weight: bold;">${projectId}</code>
                 <div class="code-snippet">${escapeHtml(html)}</div>
                 <div class="chat-actions">
                     <a href="${blobUrl}" class="chat-btn chat-btn-success" target="_blank">Open Website</a>
-                    <button class="chat-btn" onclick="copiarTexto(this, \`${btoa(encodeURIComponent(html))}\`)">Copy Code</button>
+                    <button class="chat-btn" onclick="copiarCodigoTexto(this, \`${btoa(encodeURIComponent(html))}\`)">Copy Code</button>
                 </div>
             `;
             let chat = document.getElementById('chatContainer');
             chat.scrollTop = chat.scrollHeight;
         }
 
-        function criarHtmlFallback(prompt) {
+        function criarHtmlPadrao(prompt) {
             return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OXT AI Site</title>
+    <title>OXT AI Website</title>
     <style>
-        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }
-        .card { background: #1e293b; border: 1px solid #334155; padding: 40px; border-radius: 16px; max-width: 500px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
-        h1 { color: #38bdf8; margin-bottom: 15px; font-size: 2rem; }
-        p { color: #94a3b8; margin-bottom: 25px; line-height: 1.6; }
-        .btn { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        body { background: #ffffff; color: #111827; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        button { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        button:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>OXT AI Website</h1>
-        <p><strong>Goal:</strong> ${prompt}</p>
-        <button class="btn" onclick="alert('Interactive element active!')">Click Me</button>
-    </div>
+    <button onclick="alert('Button clicked!')">Click Me</button>
 </body>
 </html>`;
         }
 
-        function carregarHistoricoDoFirebase(user) {
-            rtdb.ref(`users_data/${user}/projects`).once('value', (snapshot) => {
+        // Acessar site por código único fixado
+        async function carregarSitePorCodigo() {
+            let code = document.getElementById('accessCodeInput').value.trim();
+            if (!code) { alert("Enter a project code ID!"); return; }
+
+            rtdb.ref(`projects/${code}`).once('value', (snapshot) => {
                 if (snapshot.exists()) {
-                    let projetos = snapshot.val();
-                    Object.keys(projetos).forEach(id => {
-                        let p = projetos[id];
-                        let msgId = adicionarMensagemChat(`Website created for: ${p.prompt}`, 'ai');
-                        atualizarMensagemAI(msgId, p.prompt, p.html, id);
-                    });
+                    let data = snapshot.val();
+                    let msgId = adicionarMensagemDOM("", 'ai');
+                    atualizarMensagemDOMAI(msgId, data.prompt, data.html, code);
+                } else {
+                    alert("Project code not found.");
                 }
             });
         }
 
-        function copiarFirestoreCode(btn, encodedHtml) {
+        function copiarCodigoTexto(btn, encodedHtml) {
             let html = decodeURIComponent(atob(encodedHtml));
             navigator.clipboard.writeText(html).then(() => {
                 let original = btn.innerText;
                 btn.innerText = "Copied! ✓";
                 setTimeout(() => { btn.innerText = original; }, 2000);
             });
-        }
-        
-        function copiarTexto(btn, encodedHtml) {
-            copiarFirestoreCode(btn, encodedHtml);
         }
 
         function escapeHtml(text) {
