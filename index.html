@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OXT AI - Chat Website Creator</title>
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs Nativos Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
@@ -36,7 +36,7 @@
             overflow: hidden;
         }
 
-        /* Tela de Autenticação */
+        /* Tela de Autenticação (Nome e Senha) */
         .auth-overlay {
             display: flex;
             position: fixed;
@@ -62,7 +62,7 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
 
-        .auth-card h2 { margin-bottom: 8px; font-size: 1.5rem; }
+        .auth-card h2 { margin-bottom: 8px; font-size: 1.5rem; color: var(--text-main); }
         .auth-card p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
         .auth-input {
             width: 100%; padding: 12px 16px; background-color: var(--bg-color);
@@ -71,7 +71,7 @@
         }
         .auth-input:focus { border-color: var(--primary); }
 
-        /* Sidebar (Estilo Gemini) */
+        /* Sidebar de Conversas (Estilo Gemini) */
         .sidebar {
             width: 260px;
             background-color: var(--sidebar-bg);
@@ -176,18 +176,18 @@
 </head>
 <body>
 
-    <!-- Tela de Autenticação -->
+    <!-- Tela de Login -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-card">
             <h2>OXT AI Login</h2>
-            <p>Enter your username and password to access your chats and saved websites:</p>
+            <p>Enter your username and password to continue:</p>
             <input type="text" class="auth-input" id="usernameInput" placeholder="Username">
             <input type="password" class="auth-input" id="passwordInput" placeholder="Password">
             <button onclick="autenticarUsuario()" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer;">Continue</button>
         </div>
     </div>
 
-    <!-- Sidebar (Estilo Gemini) -->
+    <!-- Sidebar de Conversas -->
     <div class="sidebar">
         <button class="btn-new-chat" onclick="criarNovaConversa()">➕ New Chat</button>
         <div class="chat-history-list" id="chatHistoryList"></div>
@@ -210,14 +210,14 @@
         <!-- Chat Container -->
         <div class="chat-container" id="chatContainer">
             <div class="message ai">
-                Hello! I am OXT AI. Tell me what website you want to build, and I will code it instantly for you.
+                Hello! I am OXT AI. Type what website you want to build (e.g., "Create a button").
             </div>
         </div>
 
-        <!-- Input de Mensagem -->
+        <!-- Input de Envio -->
         <div class="input-area">
             <div class="input-wrapper">
-                <textarea id="promptInput" placeholder="Ask OXT AI to build or modify a website..." rows="1" onkeydown="checarEnter(event)"></textarea>
+                <textarea id="promptInput" placeholder="Ask OXT AI to build a website..." rows="1" onkeydown="checarEnter(event)"></textarea>
                 <button class="send-btn" onclick="enviarMensagem()">Send</button>
             </div>
         </div>
@@ -255,7 +255,6 @@
         async function autenticarUsuario() {
             let user = document.getElementById('usernameInput').value.trim().toLowerCase();
             let pass = document.getElementById('passwordInput').value.trim();
-
             if (!user || !pass) { alert("Enter username and password!"); return; }
 
             let userRef = rtdb.ref('users/' + user);
@@ -386,13 +385,13 @@
             rtdb.ref(`users_data/${usuarioAtual}/chats/${chatIdAtual}/title`).set(prompt.slice(0, 25));
             carregarListaDeConversas();
 
-            // Feedback dinâmico e animado imediato do que a IA está fazendo
+            // Feedback instantâneo na tela informando o andamento
             let loadingId = adicionarMensagemDOM("OXT AI: I am already creating your website... ⏳", 'ai');
 
             setTimeout(() => {
                 let el = document.getElementById(loadingId);
                 if(el) el.innerText = "OXT AI: Analyzing elements and designing layout... 🎨";
-            }, 1200);
+            }, 1000);
 
             try {
                 let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -403,7 +402,7 @@
                             {
                                 role: "user",
                                 parts: [
-                                    { text: "System rule: You are OXT AI, an expert website creator engine. If the user asks for simple things like 'create a button', make a clean white background with a normal centered button. If user asks for custom layouts, styles, or specific apps, design them cleanly. Return ONLY valid clean HTML code without markdown blocks." },
+                                    { text: "System rule: You are OXT AI, an expert website creator engine. If user says 'create a button' or similar simple request, build a clean white background with a normal centered button. If user asks for custom styles or layouts, design them cleanly. Return ONLY valid clean HTML code without markdown blocks." },
                                     { text: `User request: ${prompt}` }
                                 ]
                             }
