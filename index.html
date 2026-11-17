@@ -36,7 +36,7 @@
             padding: 20px;
         }
 
-        /* Tela de Seleção de Idioma (Language Picker Modal/Overlay) */
+        /* Language Picker Modal */
         .language-overlay {
             display: flex;
             position: fixed;
@@ -119,7 +119,6 @@
             background-color: var(--border);
         }
 
-        /* Container Principal */
         .container {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
@@ -404,25 +403,25 @@
 </head>
 <body>
 
-    <!-- Seletor de Idiomas Inicial -->
+    <!-- Language Selector Overlay -->
     <div class="language-overlay" id="languageOverlay">
         <div class="language-card">
-            <h2>Select Language</h2>
-            <p>Choose your preferred language to continue:</p>
+            <h2 id="txtSelectLangTitle">Select Language</h2>
+            <p id="txtSelectLangDesc">Choose your preferred language to continue:</p>
             <input type="text" class="lang-search" id="langSearch" placeholder="Search language or country..." onkeyup="filtrarIdiomas()">
             <div class="lang-list" id="langList">
-                <div class="lang-item" onclick="selecionarIdioma('English')"><span>🇺🇸 English</span><span>EN</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('Portuguese (Brazil)')"><span>🇧🇷 Portuguese (Brazil)</span><span>PT-BR</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('Spanish')"><span>🇪🇸 Spanish</span><span>ES</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('French')"><span>🇫🇷 French</span><span>FR</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('German')"><span>🇩🇪 German</span><span>DE</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('Italian')"><span>🇮🇹 Italian</span><span>IT</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('Japanese')"><span>🇯🇵 Japanese</span><span>JA</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('Korean')"><span>🇰🇷 Korean</span><span>KO</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('Chinese (Mandarin)')"><span>🇨🇳 Chinese (Mandarin)</span><span>ZH</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('Russian')"><span>🇷🇺 Russian</span><span>RU</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('Arabic')"><span>🇸🇦 Arabic</span><span>AR</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('Hindi')"><span>🇮🇳 Hindi</span><span>HI</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('en', 'English')"><span>🇺🇸 English</span><span>EN</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('pt', 'Portuguese (Brazil)')"><span>🇧🇷 Portuguese (Brazil)</span><span>PT-BR</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('es', 'Spanish')"><span>🇪🇸 Spanish</span><span>ES</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('fr', 'French')"><span>🇫🇷 French</span><span>FR</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('de', 'German')"><span>🇩🇪 German</span><span>DE</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('it', 'Italian')"><span>🇮🇹 Italian</span><span>IT</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('ja', 'Japanese')"><span>🇯🇵 Japanese</span><span>JA</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('ko', 'Korean')"><span>🇰🇷 Korean</span><span>KO</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('zh', 'Chinese (Mandarin)')"><span>🇨🇳 Chinese (Mandarin)</span><span>ZH</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('ru', 'Russian')"><span>🇷🇺 Russian</span><span>RU</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('ar', 'Arabic')"><span>🇸🇦 Arabic</span><span>AR</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('hi', 'Hindi')"><span>🇮🇳 Hindi</span><span>HI</span></div>
             </div>
         </div>
     </div>
@@ -454,7 +453,7 @@
         </div>
 
         <div class="error-box" id="errorBox">
-            <div class="error-title">⚠️ Inspection Failed</div>
+            <div class="error-title" id="txtErrorTitle">⚠️ Inspection Failed</div>
             <div class="error-desc" id="errorDesc">No errors recorded.</div>
         </div>
 
@@ -462,7 +461,7 @@
             <div class="lines-count" id="linesCountText">Lines found: 0</div>
             <div class="actions">
                 <button class="btn-copy" onclick="copiarCodigo()">Copy Code</button>
-                <button class="btn-view" onclick="alternarVisualizacao()">View Full HTML</button>
+                <button class="btn-view" id="btnViewHtml" onclick="alternarVisualizacao()">View Full HTML</button>
             </div>
             <div class="code-viewer" id="codeViewer"></div>
         </div>
@@ -470,30 +469,120 @@
 
     <div class="modal-overlay" id="betaModal" onclick="fecharModalBeta(event)">
         <div class="modal-card">
-            <h3>Beta Version Info</h3>
-            <p>This is version <strong>Beta 1</strong> of OXT. Because the system is under active development and handles heavy code structures (even 10,000+ lines), you may still encounter visual bugs or instability depending on the inspected site.</p>
-            <button onclick="fecharModalBetaDireto()">Understood</button>
+            <h3 id="txtModalTitle">Beta Version Info</h3>
+            <p id="txtModalDesc">This is version <strong>Beta 1</strong> of OXT. Because the system is under active development and handles heavy code structures (even 10,000+ lines), you may still encounter visual bugs or instability depending on the inspected site.</p>
+            <button onclick="fecharModalBetaDireto()" id="txtModalBtn">Understood</button>
         </div>
     </div>
 
     <script>
         let codigoHtmlGlobal = "";
 
-        // Gerenciamento de Idioma com localStorage
+        // Dicionário de Traduções
+        const traducoes = {
+            en: {
+                selectTitle: "Select Language",
+                selectDesc: "Choose your preferred language to continue:",
+                searchPlaceholder: "Search language or country...",
+                urlPlaceholder: "Enter website link (e.g., https://example.com)",
+                startBtn: "Start Inspection",
+                statusStart: "Bypassing firewall and connecting...",
+                statusStep1: "Bypassing anti-bot protection...",
+                statusStep2: "Extracting DOM and deep layers...",
+                statusStep3: "Assembling full HTML structure...",
+                errorTitle: "⚠️ Inspection Failed",
+                linesFound: "The code has {lines} lines.",
+                copyBtn: "Copy Code",
+                copiedBtn: "Copied! ✓",
+                viewBtn: "View Full HTML",
+                hideBtn: "Hide HTML",
+                modalTitle: "Beta Version Info",
+                modalDesc: "This is version <strong>Beta 1</strong> of OXT with Anti-Block Bypass. It forces connection to protected servers (like Vercel & Cloudflare), but heavy sites may take a few extra seconds.",
+                modalBtn: "Understood"
+            },
+            pt: {
+                selectTitle: "Selecionar Idioma",
+                selectDesc: "Escolha seu idioma de preferência para continuar:",
+                searchPlaceholder: "Pesquisar idioma ou país...",
+                urlPlaceholder: "Digite o link do site (ex: https://exemplo.com)",
+                startBtn: "Começar Inspeção",
+                statusStart: "Burlando firewall e conectando...",
+                statusStep1: "Contornando proteção anti-bot...",
+                statusStep2: "Extraindo DOM e camadas profundas...",
+                statusStep3: "Montando estrutura HTML completa...",
+                errorTitle: "⚠️ Falha na Inspeção",
+                linesFound: "O código possui {lines} linhas.",
+                copyBtn: "Copiar Código",
+                copiedBtn: "Copiado! ✓",
+                viewBtn: "Ver HTML Inteiro",
+                hideBtn: "Esconder HTML",
+                modalTitle: "Informação da Versão Beta",
+                modalDesc: "Esta é a versão <strong>Beta 1</strong> do OXT com Burlador Anti-Bloqueio. Ela força a conexão com servidores protegidos (como Vercel e Cloudflare), mas sites pesados podem demorar alguns segundos a mais.",
+                modalBtn: "Entendido"
+            },
+            es: {
+                selectTitle: "Seleccionar Idioma",
+                selectDesc: "Elija su idioma preferido para continuar:",
+                searchPlaceholder: "Buscar idioma o país...",
+                urlPlaceholder: "Ingrese el enlace del sitio web...",
+                startBtn: "Iniciar Inspección",
+                statusStart: "Evadiendo firewall y conectando...",
+                statusStep1: "Contornando protección anti-bot...",
+                statusStep2: "Extrayendo capas profundas del DOM...",
+                statusStep3: "Ensamblando estructura HTML...",
+                errorTitle: "⚠️ Falló la Inspección",
+                linesFound: "El código tiene {lines} líneas.",
+                copyBtn: "Copiar Código",
+                copiedBtn: "¡Copiado! ✓",
+                viewBtn: "Ver HTML Completo",
+                hideBtn: "Ocultar HTML",
+                modalTitle: "Información Versión Beta",
+                modalDesc: "Esta es la versión <strong>Beta 1</strong> de OXT con Bypass Anti-Bloqueo.",
+                modalBtn: "Entendido"
+            }
+        };
+
+        // Gerenciamento de Idioma e Persistência
         window.addEventListener('DOMContentLoaded', () => {
-            let idiomaSalvo = localStorage.getItem('oxt_lang');
-            if (idiomaSalvo) {
+            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
+            let langName = localStorage.getItem('oxt_lang_name') || 'English';
+            
+            aplicarIdioma(langCode, langName);
+
+            if (localStorage.getItem('oxt_lang_code')) {
                 document.getElementById('languageOverlay').style.display = 'none';
-                document.getElementById('currentLangDisplay').innerText = idiomaSalvo;
             } else {
                 document.getElementById('languageOverlay').style.display = 'flex';
             }
         });
 
-        function selecionarIdioma(idioma) {
-            localStorage.setItem('oxt_lang', idioma);
-            document.getElementById('currentLangDisplay').innerText = idioma;
+        function selecionarIdioma(code, name) {
+            localStorage.setItem('oxt_lang_code', code);
+            localStorage.setItem('oxt_lang_name', name);
+            aplicarIdioma(code, name);
             document.getElementById('languageOverlay').style.display = 'none';
+        }
+
+        function aplicarIdioma(code, name) {
+            document.getElementById('currentLangDisplay').innerText = name;
+            let t = traducoes[code] || traducoes['en'];
+
+            document.getElementById('txtSelectLangTitle').innerText = t.selectTitle;
+            document.getElementById('txtSelectLangDesc').innerText = t.selectDesc;
+            document.getElementById('langSearch').placeholder = t.searchPlaceholder;
+            document.getElementById('urlInput').placeholder = t.urlPlaceholder;
+            document.getElementById('startBtn').innerText = t.startBtn;
+            document.getElementById('txtErrorTitle').innerText = t.errorTitle;
+            document.getElementById('txtModalTitle').innerText = t.modalTitle;
+            document.getElementById('txtModalDesc').innerHTML = t.modalDesc;
+            document.getElementById('txtModalBtn').innerText = t.modalBtn;
+
+            const btnView = document.getElementById('btnViewHtml');
+            if (btnView.dataset.viewing === "true") {
+                btnView.innerText = t.hideBtn;
+            } else {
+                btnView.innerText = t.viewBtn;
+            }
         }
 
         function abrirSeletorIdioma() {
@@ -539,12 +628,14 @@
             let url = document.getElementById('urlInput').value.trim();
             const errorBox = document.getElementById('errorBox');
             const resultSection = document.getElementById('resultSection');
+            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
+            let t = traducoes[langCode] || traducoes['en'];
             
             errorBox.style.display = 'none';
             resultSection.style.display = 'none';
 
             if (!url) {
-                alert("Please enter a valid URL!");
+                alert(langCode === 'pt' ? "Por favor, digite um link válido!" : "Please enter a valid URL!");
                 return;
             }
 
@@ -557,83 +648,93 @@
             document.getElementById('progressBox').style.display = 'block';
 
             let progresso = 5;
-            atualizarStatus(progresso, "Connecting to main proxy...", "Please wait...");
+            atualizarStatus(progresso, t.statusStart, "Bypassing...");
 
             let intervaloProgresso = setInterval(() => {
                 if (progresso < 90) {
                     progresso += 3;
-                    if (progresso === 20) {
-                        atualizarStatus(progresso, "Fetching data packets...", "Downloading...");
-                    } else if (progresso === 50) {
-                        atualizarStatus(progresso, "Scanning lines and checking integrity...", "Almost there...");
+                    if (progresso === 25) {
+                        atualizarStatus(progresso, t.statusStep1, "Proxy rotation...");
+                    } else if (progresso === 55) {
+                        atualizarStatus(progresso, t.statusStep2, "Extracting code...");
                     } else if (progresso === 80) {
-                        atualizarStatus(progresso, "Structuring HTML code...", "Finishing...");
+                        atualizarStatus(progresso, t.statusStep3, "Almost done...");
                     }
                 }
-            }, 100);
+            }, 120);
 
-            let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+            // Sistema Triplo de Proxies com Rotação (Burlador Anti-Bloqueio)
+            const proxies = [
+                `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+                `https://thingproxy.freeboard.io/fetch/${url}`,
+                `https://corsproxy.io/?${encodeURIComponent(url)}`
+            ];
 
-            try {
-                let response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error("Main proxy failed.");
-                let data = await response.json();
-                
-                if (!data.contents) throw new Error("Returned content is empty.");
-                codigoHtmlGlobal = data.contents;
-                sucessoExtracao(intervaloProgresso);
+            let htmlObtido = null;
 
-            } catch (errPrimary) {
-                atualizarStatus(45, "Switching to backup proxy...", "Retrying...");
-                
+            for (let i = 0; i < proxies.length; i++) {
                 try {
-                    let proxyAltUrl = `https://thingproxy.freeboard.io/fetch/${url}`;
-                    let responseAlt = await fetch(proxyAltUrl);
-                    
-                    if (!responseAlt.ok) throw new Error(`HTTP Error: ${responseAlt.status} - Connection refused.`);
-                    
-                    codigoHtmlGlobal = await responseAlt.text();
-                    if (!codigoHtmlGlobal) throw new Error("No HTML content found.");
-                    
-                    sucessoExtracao(intervaloProgresso);
+                    let response = await fetch(proxies[i]);
+                    if (!response.ok) continue;
 
-                } catch (errFinal) {
-                    clearInterval(intervaloProgresso);
-                    document.getElementById('progressBox').style.display = 'none';
-                    document.getElementById('startBtn').style.display = 'block';
-                    document.getElementById('urlInput').disabled = false;
-                    
-                    errorBox.style.display = 'block';
-                    document.getElementById('errorDesc').innerText = `Failed to fetch: Target site blocked direct access or URL is invalid. (${errFinal.message})`;
-                    console.error(errFinal);
+                    if (i === 0) {
+                        let data = await response.json();
+                        if (data.contents) htmlObtido = data.contents;
+                    } else {
+                        htmlObtido = await response.text();
+                    }
+
+                    if (htmlObtido && htmlObtido.length > 50) break;
+                } catch (e) {
+                    console.warn(`Proxy ${i+1} falhou, tentando o próximo...`, e);
                 }
+            }
+
+            clearInterval(intervaloProgresso);
+
+            if (htmlObtido && htmlObtido.length > 0) {
+                codigoHtmlGlobal = htmlObtido;
+                let totalLinhas = codigoHtmlGlobal.split('\n').length;
+                let textoConcluido = langCode === 'pt' ? "Concluído com sucesso!" : "Completed successfully!";
+                let textoLinhas = (langCode === 'pt' ? "linhas carregadas!" : "lines loaded!");
+
+                atualizarStatus(100, textoConcluido, `${totalLinhas.toLocaleString()} ${textoLinhas}`);
+
+                setTimeout(() => {
+                    document.getElementById('progressBox').style.display = 'none';
+                    mostrarResultados(totalLinhas);
+                }, 500);
+            } else {
+                document.getElementById('progressBox').style.display = 'none';
+                document.getElementById('startBtn').style.display = 'block';
+                document.getElementById('urlInput').disabled = false;
+                
+                errorBox.style.display = 'block';
+                document.getElementById('errorDesc').innerText = langCode === 'pt' 
+                    ? "Falha ao burlar: O site de destino possui proteção extrema (Vercel/Cloudflare Shield) que recusou todos os túneis de proxy." 
+                    : "Bypass failed: Target site has extreme protection (Vercel/Cloudflare Shield) blocking all proxy tunnels.";
             }
         }
 
-        function sucessoExtracao(intervalo) {
-            clearInterval(intervalo);
-            let totalLinhas = codigoHtmlGlobal.split('\n').length;
-
-            atualizarStatus(100, "Completed successfully!", `${totalLinhas.toLocaleString('en-US')} lines loaded!`);
-
-            setTimeout(() => {
-                document.getElementById('progressBox').style.display = 'none';
-                mostrarResultados(totalLinhas);
-            }, 500);
-        }
-
         function mostrarResultados(totalLinhas) {
-            document.getElementById('linesCountText').innerText = `The code has ${totalLinhas.toLocaleString('en-US')} lines.`;
+            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
+            let t = traducoes[langCode] || traducoes['en'];
+            let fraseLinhas = t.linesFound.replace('{lines}', totalLinhas.toLocaleString());
+
+            document.getElementById('linesCountText').innerText = fraseLinhas;
             document.getElementById('codeViewer').innerText = codigoHtmlGlobal;
             document.getElementById('resultSection').style.display = 'block';
         }
 
         function copiarCodigo() {
+            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
+            let t = traducoes[langCode] || traducoes['en'];
+
             navigator.clipboard.writeText(codigoHtmlGlobal).then(() => {
                 const btnCopy = document.querySelector('.btn-copy');
-                btnCopy.innerText = "Copied! ✓";
+                btnCopy.innerText = t.copiedBtn;
                 setTimeout(() => {
-                    btnCopy.innerText = "Copy Code";
+                    btnCopy.innerText = t.copyBtn;
                 }, 2000);
             }).catch(err => {
                 alert("Error copying code.");
@@ -641,15 +742,19 @@
         }
 
         function alternarVisualizacao() {
+            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
+            let t = traducoes[langCode] || traducoes['en'];
             const viewer = document.getElementById('codeViewer');
-            const btnView = document.querySelector('.btn-view');
+            const btnView = document.getElementById('btnViewHtml');
 
             if (viewer.style.display === 'block') {
                 viewer.style.display = 'none';
-                btnView.innerText = "View Full HTML";
+                btnView.innerText = t.viewBtn;
+                btnView.dataset.viewing = "false";
             } else {
                 viewer.style.display = 'block';
-                btnView.innerText = "Hide HTML";
+                btnView.innerText = t.hideBtn;
+                btnView.dataset.viewing = "true";
             }
         }
     </script>
