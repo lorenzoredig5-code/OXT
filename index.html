@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OXT - HTML Inspector</title>
+    <title>OXT AI - Website Creator</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -84,11 +87,6 @@
             font-size: 0.95rem;
             outline: none;
             margin-bottom: 15px;
-            transition: border-color 0.2s;
-        }
-
-        .lang-search:focus {
-            border-color: var(--primary);
         }
 
         .lang-list {
@@ -125,7 +123,7 @@
             border-radius: 16px;
             padding: 30px;
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             text-align: center;
         }
@@ -175,7 +173,12 @@
             letter-spacing: 2px;
         }
 
-        .btn-change-lang {
+        .btn-header-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
             background: none;
             border: 1px solid var(--border);
             color: var(--text-muted);
@@ -186,7 +189,7 @@
             transition: all 0.2s;
         }
 
-        .btn-change-lang:hover {
+        .btn-small:hover {
             border-color: var(--primary);
             color: var(--text-main);
         }
@@ -198,7 +201,7 @@
             margin-bottom: 20px;
         }
 
-        input[type="url"] {
+        textarea {
             width: 100%;
             padding: 14px 18px;
             background-color: var(--bg-color);
@@ -207,10 +210,12 @@
             color: var(--text-main);
             font-size: 1rem;
             outline: none;
+            resize: vertical;
+            min-height: 100px;
             transition: border-color 0.2s;
         }
 
-        input[type="url"]:focus {
+        textarea:focus {
             border-color: var(--primary);
         }
 
@@ -234,6 +239,7 @@
             transform: scale(0.98);
         }
 
+        /* Barra de Progresso */
         .progress-box {
             display: none;
             margin-top: 15px;
@@ -270,37 +276,14 @@
         }
 
         .status-details {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
-            margin-top: 8px;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 500;
         }
 
-        .error-box {
-            display: none;
-            margin-top: 20px;
-            background-color: rgba(239, 68, 68, 0.1);
-            border: 1px solid var(--error);
-            border-radius: 10px;
-            padding: 15px;
-            text-align: left;
-        }
-
-        .error-title {
-            color: var(--error);
-            font-weight: bold;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-
-        .error-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-family: monospace;
-            word-break: break-all;
-        }
-
+        /* Seção de Resultados */
         .result-section {
             display: none;
             margin-top: 25px;
@@ -313,50 +296,54 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .lines-count {
-            font-size: 0.9rem;
-            color: var(--text-muted);
+        .project-id-display {
+            font-size: 0.85rem;
+            color: var(--success);
             margin-bottom: 12px;
+            background: rgba(34, 197, 94, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(34, 197, 94, 0.3);
         }
 
         .actions {
             display: flex;
             gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .btn-copy {
+        .btn-open {
             background-color: var(--success);
             flex: 1;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .btn-copy:hover {
+        .btn-open:hover {
             background-color: #16a34a;
         }
 
-        .btn-view {
-            background-color: #334155;
+        .btn-copy {
+            background-color: var(--primary);
             flex: 1;
-        }
-        .btn-view:hover {
-            background-color: #475569;
         }
 
         .code-viewer {
-            display: none;
-            margin-top: 15px;
             background-color: var(--bg-color);
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 15px;
-            max-height: 300px;
+            max-height: 250px;
             overflow-y: auto;
             font-family: 'Courier New', Courier, monospace;
             font-size: 0.85rem;
             color: #38bdf8;
             white-space: pre-wrap;
             word-break: break-all;
-            text-align: left;
         }
 
+        /* Modais */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -377,9 +364,11 @@
             border-radius: 14px;
             padding: 25px;
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             text-align: center;
             animation: scaleIn 0.3s ease-in-out;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         @keyframes scaleIn {
@@ -388,16 +377,58 @@
         }
 
         .modal-card h3 {
-            color: var(--beta-color);
-            margin-bottom: 12px;
+            color: var(--text-main);
+            margin-bottom: 15px;
             font-size: 1.2rem;
         }
 
-        .modal-card p {
-            font-size: 0.9rem;
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .history-item {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: var(--primary);
+        }
+
+        .history-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .history-sub {
+            font-size: 0.75rem;
             color: var(--text-muted);
-            line-height: 1.5;
-            margin-bottom: 20px;
+        }
+
+        .access-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .access-box input {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            outline: none;
         }
     </style>
 </head>
@@ -406,353 +437,332 @@
     <!-- Language Selector Overlay -->
     <div class="language-overlay" id="languageOverlay">
         <div class="language-card">
-            <h2 id="txtSelectLangTitle">Select Language</h2>
-            <p id="txtSelectLangDesc">Choose your preferred language to continue:</p>
-            <input type="text" class="lang-search" id="langSearch" placeholder="Search language or country..." onkeyup="filtrarIdiomas()">
+            <h2>Select Language</h2>
+            <p>Choose your preferred language to continue:</p>
+            <input type="text" class="lang-search" id="langSearch" placeholder="Search language..." onkeyup="filtrarIdiomas()">
             <div class="lang-list" id="langList">
                 <div class="lang-item" onclick="selecionarIdioma('en', 'English')"><span>🇺🇸 English</span><span>EN</span></div>
                 <div class="lang-item" onclick="selecionarIdioma('pt', 'Portuguese (Brazil)')"><span>🇧🇷 Portuguese (Brazil)</span><span>PT-BR</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('es', 'Spanish')"><span>🇪🇸 Spanish</span><span>ES</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('fr', 'French')"><span>🇫🇷 French</span><span>FR</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('de', 'German')"><span>🇩🇪 German</span><span>DE</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('it', 'Italian')"><span>🇮🇹 Italian</span><span>IT</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('ja', 'Japanese')"><span>🇯🇵 Japanese</span><span>JA</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('ko', 'Korean')"><span>🇰🇷 Korean</span><span>KO</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('zh', 'Chinese (Mandarin)')"><span>🇨🇳 Chinese (Mandarin)</span><span>ZH</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('ru', 'Russian')"><span>🇷🇺 Russian</span><span>RU</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('ar', 'Arabic')"><span>🇸🇦 Arabic</span><span>AR</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('hi', 'Hindi')"><span>🇮🇳 Hindi</span><span>HI</span></div>
             </div>
         </div>
     </div>
 
     <div class="container">
         <div class="header-area">
-            <h1>OXT</h1>
+            <h1>OXT AI</h1>
             <div class="beta-badge" onclick="abrirModalBeta()">Beta 1</div>
         </div>
         <div class="top-bar">
-            <div class="version">Version 1.0</div>
-            <button class="btn-change-lang" onclick="abrirSeletorIdioma()">🌐 <span id="currentLangDisplay">English</span></button>
+            <div class="version">AI Website Creator</div>
+            <div class="btn-header-group">
+                <button class="btn-small" onclick="abrirHistorico()">📜 History</button>
+                <button class="btn-small" onclick="abrirModalAcesso()">🔑 Access Code</button>
+                <button class="btn-small" onclick="abrirSeletorIdioma()">🌐 <span id="currentLangDisplay">EN</span></button>
+            </div>
         </div>
 
+        <!-- Área de Comando para a IA Criar o Site -->
         <div class="input-group" id="inputSection">
-            <input type="url" id="urlInput" placeholder="Enter website link (e.g., https://example.com)" required>
-            <button id="startBtn" onclick="iniciarExtracao()">Start Inspection</button>
+            <textarea id="promptInput" placeholder="Describe the website you want OXT AI to create (e.g., Create a website named My First Site with a button)..."></textarea>
+            <button id="startBtn" onclick="gerarSiteComIA()">Generate Website</button>
         </div>
 
+        <!-- Barra de Progresso e Status -->
         <div class="progress-box" id="progressBox">
             <div class="progress-container">
                 <div class="progress-bar" id="progressBar"></div>
                 <div class="progress-text" id="progressText">0%</div>
             </div>
-            <div class="status-details">
-                <span id="statusMessage">Starting request...</span>
-                <span id="timeLeft">Processing...</span>
-            </div>
+            <div class="status-details" id="statusMessage">I am creating your website...</div>
         </div>
 
-        <div class="error-box" id="errorBox">
-            <div class="error-title" id="txtErrorTitle">⚠️ Inspection Failed</div>
-            <div class="error-desc" id="errorDesc">No errors recorded.</div>
-        </div>
-
+        <!-- Seção de Resultados -->
         <div class="result-section" id="resultSection">
-            <div class="lines-count" id="linesCountText">Lines found: 0</div>
+            <div class="project-id-display" id="projectIdDisplay">Project Saved ID: <span></span></div>
             <div class="actions">
+                <a href="#" id="openSiteBtn" class="btn-open" target="_blank">Open Website</a>
                 <button class="btn-copy" onclick="copiarCodigo()">Copy Code</button>
-                <button class="btn-view" id="btnViewHtml" onclick="alternarVisualizacao()">View Full HTML</button>
             </div>
             <div class="code-viewer" id="codeViewer"></div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="betaModal" onclick="fecharModalBeta(event)">
+    <!-- Modal Histórico -->
+    <div class="modal-overlay" id="historyModal" onclick="fecharModais(event)">
         <div class="modal-card">
-            <h3 id="txtModalTitle">Beta Version Info</h3>
-            <p id="txtModalDesc">This is version <strong>Beta 1</strong> of OXT. It pulls the actual raw source code from target URLs using secure proxy tunnels.</p>
-            <button onclick="fecharModalBetaDireto()" id="txtModalBtn">Understood</button>
+            <h3>Generation History</h3>
+            <div class="history-list" id="historyListContainer">
+                <p style="color: var(--text-muted); font-size: 0.9rem;">No history found yet.</p>
+            </div>
+            <button onclick="fecharModaisDireto()">Close</button>
+        </div>
+    </div>
+
+    <!-- Modal Acessar por Código -->
+    <div class="modal-overlay" id="accessModal" onclick="fecharModais(event)">
+        <div class="modal-card">
+            <h3>Access Website by Code</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Enter the unique project code saved in Firebase:</p>
+            <div class="access-box">
+                <input type="text" id="accessCodeInput" placeholder="Paste project code here...">
+                <button onclick="carregarSiteDoFirebase()" style="padding: 10px 15px;">Load</button>
+            </div>
+            <button onclick="fecharModaisDireto()" style="background: #334155; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Modal Beta -->
+    <div class="modal-overlay" id="betaModal" onclick="fecharModais(event)">
+        <div class="modal-card">
+            <h3>OXT AI Beta Info</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">OXT AI is strictly a professional Website Creator powered by Google Gemini and Firebase. All irrelevant inputs are automatically converted into site creation prompts.</p>
+            <button onclick="fecharModaisDireto()">Understood</button>
         </div>
     </div>
 
     <script>
-        let codigoHtmlGlobal = "";
-
-        const traducoes = {
-            en: {
-                selectTitle: "Select Language",
-                selectDesc: "Choose your preferred language to continue:",
-                searchPlaceholder: "Search language or country...",
-                urlPlaceholder: "Enter website link (e.g., https://example.com)",
-                startBtn: "Start Inspection",
-                statusStart: "Connecting to secure proxy tunnel...",
-                statusStep1: "Fetching target website source code...",
-                statusStep2: "Extracting DOM layers and scripts...",
-                statusStep3: "Assembling HTML lines...",
-                errorTitle: "⚠️ Inspection Failed",
-                linesFound: "The code has {lines} lines.",
-                copyBtn: "Copy Code",
-                copiedBtn: "Copied! ✓",
-                viewBtn: "View Full HTML",
-                hideBtn: "Hide HTML",
-                modalTitle: "Beta Version Info",
-                modalDesc: "This is version <strong>Beta 1</strong> of OXT. It extracts the real raw HTML source code from target websites.",
-                modalBtn: "Understood"
-            },
-            pt: {
-                selectTitle: "Selecionar Idioma",
-                selectDesc: "Escolha seu idioma de preferência para continuar:",
-                searchPlaceholder: "Pesquisar idioma ou país...",
-                urlPlaceholder: "Digite o link do site (ex: https://exemplo.com)",
-                startBtn: "Começar Inspeção",
-                statusStart: "Conectando ao túnel de proxy seguro...",
-                statusStep1: "Buscando código fonte do site alvo...",
-                statusStep2: "Extraindo camadas DOM e scripts...",
-                statusStep3: "Montando as linhas do HTML...",
-                errorTitle: "⚠️ Falha na Inspeção",
-                linesFound: "O código possui {lines} linhas.",
-                copyBtn: "Copiar Código",
-                copiedBtn: "Copiado! ✓",
-                viewBtn: "Ver HTML Inteiro",
-                hideBtn: "Esconder HTML",
-                modalTitle: "Informação da Versão Beta",
-                modalDesc: "Esta é a versão <strong>Beta 1</strong> do OXT. Ela extrai o código fonte HTML real e bruto dos sites alvo.",
-                modalBtn: "Entendido"
-            },
-            es: {
-                selectTitle: "Seleccionar Idioma",
-                selectDesc: "Elija su idioma preferido para continuar:",
-                searchPlaceholder: "Buscar idioma o país...",
-                urlPlaceholder: "Ingrese el enlace del sitio web...",
-                startBtn: "Iniciar Inspección",
-                statusStart: "Conectando al proxy...",
-                statusStep1: "Obteniendo código fuente...",
-                statusStep2: "Extrayendo capas DOM...",
-                statusStep3: "Ensamblando HTML...",
-                errorTitle: "⚠️ Falló la Inspección",
-                linesFound: "El código tiene {lines} líneas.",
-                copyBtn: "Copiar Código",
-                copiedBtn: "¡Copiado! ✓",
-                viewBtn: "Ver HTML Completo",
-                hideBtn: "Ocultar HTML",
-                modalTitle: "Información Versión Beta",
-                modalDesc: "Esta es la versión <strong>Beta 1</strong> de OXT.",
-                modalBtn: "Entendido"
-            }
+        // FIREBASE CONFIG CONECTADO
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJf2YuT_MTutaIQD1538aewftKj_hr_rQ",
+            authDomain: "radio-43909.firebaseapp.com",
+            databaseURL: "https://radio-43909-default-rtdb.firebaseio.com",
+            projectId: "radio-43909",
+            storageBucket: "radio-43909.firebasestorage.app",
+            messagingSenderId: "52262135904",
+            appId: "1:52262135904:web:169a7405b3fe0c76827b05",
+            measurementId: "G-FDKRJ35EB5"
         };
 
-        window.addEventListener('DOMContentLoaded', () => {
-            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
-            let langName = localStorage.getItem('oxt_lang_name') || 'English';
-            
-            aplicarIdioma(langCode, langName);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-            if (localStorage.getItem('oxt_lang_code')) {
-                document.getElementById('languageOverlay').style.display = 'none';
-            } else {
-                document.getElementById('languageOverlay').style.display = 'flex';
-            }
-        });
+        // SUA API DO GEMINI
+        const GEMINI_API_KEY = "AQ.Ab8RN6Ki0P7LukRelWJptkvqZ5VaaxDIytSwG_k0_3FYE_TNwQ";
+
+        let codigoHtmlGeradoGlobal = "";
 
         function selecionarIdioma(code, name) {
-            localStorage.setItem('oxt_lang_code', code);
-            localStorage.setItem('oxt_lang_name', name);
-            aplicarIdioma(code, name);
+            localStorage.setItem('oxt_lang', code);
+            document.getElementById('currentLangDisplay').innerText = code.toUpperCase();
             document.getElementById('languageOverlay').style.display = 'none';
         }
 
-        function aplicarIdioma(code, name) {
-            document.getElementById('currentLangDisplay').innerText = name;
-            let t = traducoes[code] || traducoes['en'];
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('oxt_lang')) {
+                document.getElementById('languageOverlay').style.display = 'none';
+            }
+        });
 
-            document.getElementById('txtSelectLangTitle').innerText = t.selectTitle;
-            document.getElementById('txtSelectLangDesc').innerText = t.selectDesc;
-            document.getElementById('langSearch').placeholder = t.searchPlaceholder;
-            document.getElementById('urlInput').placeholder = t.urlPlaceholder;
-            document.getElementById('startBtn').innerText = t.startBtn;
-            document.getElementById('txtErrorTitle').innerText = t.errorTitle;
-            document.getElementById('txtModalTitle').innerText = t.modalTitle;
-            document.getElementById('txtModalDesc').innerHTML = t.modalDesc;
-            document.getElementById('txtModalBtn').innerText = t.modalBtn;
-
-            const btnView = document.getElementById('btnViewHtml');
-            if (btnView.dataset.viewing === "true") {
-                btnView.innerText = t.hideBtn;
-            } else {
-                btnView.innerText = t.viewBtn;
+        function abrirSeletorIdioma() { document.getElementById('languageOverlay').style.display = 'flex'; }
+        function abrirModalBeta() { document.getElementById('betaModal').style.display = 'flex'; }
+        function abrirHistorico() {
+            renderizarHistorico();
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+        function abrirModalAcesso() { document.getElementById('accessModal').style.display = 'flex'; }
+        
+        function fecharModais(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.style.display = 'none';
             }
         }
-
-        function abrirSeletorIdioma() {
-            document.getElementById('languageOverlay').style.display = 'flex';
+        function fecharModaisDireto() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
         }
 
-        function filtrarIdiomas() {
-            let filtro = document.getElementById('langSearch').value.toLowerCase();
-            let itens = document.getElementById('langList').getElementsByClassName('lang-item');
-            
-            for (let i = 0; i < itens.length; i++) {
-                let texto = itens[i].innerText.toLowerCase();
-                if (texto.includes(filtro)) {
-                    itens[i].style.display = "flex";
-                } else {
-                    itens[i].style.display = "none";
-                }
-            }
-        }
-
-        function abrirModalBeta() {
-            document.getElementById('betaModal').style.display = 'flex';
-        }
-
-        function fecharModalBeta(event) {
-            if (event.target.id === 'betaModal') {
-                document.getElementById('betaModal').style.display = 'none';
-            }
-        }
-
-        function fecharModalBetaDireto() {
-            document.getElementById('betaModal').style.display = 'none';
-        }
-
-        function atualizarStatus(porcentagem, mensagem, tempoRestante) {
-            document.getElementById('progressBar').style.width = porcentagem + '%';
-            document.getElementById('progressText').innerText = porcentagem + '%';
-            document.getElementById('statusMessage').innerText = mensagem;
-            document.getElementById('timeLeft').innerText = tempoRestante;
-        }
-
-        async function iniciarExtracao() {
-            let url = document.getElementById('urlInput').value.trim();
-            const errorBox = document.getElementById('errorBox');
-            const resultSection = document.getElementById('resultSection');
-            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
-            let t = traducoes[langCode] || traducoes['en'];
-            
-            errorBox.style.display = 'none';
-            resultSection.style.display = 'none';
-
-            if (!url) {
-                alert(langCode === 'pt' ? "Por favor, digite um link válido!" : "Please enter a valid URL!");
+        // Motor IA do OXT AI com blindagem contra spam/conversas e integração Gemini
+        async function gerarSiteComIA() {
+            let prompt = document.getElementById('promptInput').value.trim();
+            if (!prompt) {
+                alert("Please type what website you want OXT AI to create!");
                 return;
             }
 
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                url = 'https://' + url;
-            }
-
             document.getElementById('startBtn').style.display = 'none';
-            document.getElementById('urlInput').disabled = true;
+            document.getElementById('promptInput').disabled = true;
             document.getElementById('progressBox').style.display = 'block';
+            document.getElementById('resultSection').style.display = 'none';
 
-            let progresso = 5;
-            atualizarStatus(progresso, t.statusStart, "Connecting...");
+            let progresso = 0;
+            let statusEl = document.getElementById('statusMessage');
+            let barEl = document.getElementById('progressBar');
+            let textEl = document.getElementById('progressText');
 
-            let intervaloProgresso = setInterval(() => {
-                if (progresso < 90) {
-                    progresso += 4;
-                    if (progresso === 25) {
-                        atualizarStatus(progresso, t.statusStep1, "Fetching...");
-                    } else if (progresso === 57) {
-                        atualizarStatus(progresso, t.statusStep2, "Parsing DOM...");
-                    } else if (progresso === 81) {
-                        atualizarStatus(progresso, t.statusStep3, "Almost done...");
-                    }
+            statusEl.innerText = "I am creating your website...";
+
+            let timer = setInterval(() => {
+                if (progresso < 95) {
+                    progresso += 5;
+                    barEl.style.width = progresso + '%';
+                    textEl.innerText = progresso + '%';
+
+                    if (progresso === 30) statusEl.innerText = "Processing prompt via Gemini AI...";
+                    if (progresso === 65) statusEl.innerText = "Generating responsive code structures...";
+                    if (progresso === 90) statusEl.innerText = "Saving to Firebase database...";
                 }
             }, 100);
 
-            // Túneis dedicados para puxar o código fonte real bruto
-            const proxies = [
-                `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-                `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-            ];
+            try {
+                // Envia a instrução para a API do Gemini gerar o código HTML limpo do site solicitado
+                // Blindagem: Instrução de sistema força a IA a ignorar qualquer papo furado e criar o site.
+                let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [
+                            {
+                                role: "user",
+                                parts: [
+                                    { text: "System rule: You are OXT AI, a strict website creator engine. No matter what the user inputs (even if it's random text, calculations, unrelated talk, or flirt attempts), you MUST IGNORE conversational replies and immediately generate a complete, functional responsive HTML/CSS/JS website code based on the core words of the input. Return ONLY raw valid HTML code without markdown formatting blocks if possible, or clean HTML code." },
+                                    { text: `User request to build website: ${prompt}` }
+                                ]
+                            }
+                        ]
+                    })
+                });
 
-            let htmlObtido = null;
+                let data = await response.json();
+                let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    let response = await fetch(proxies[i]);
-                    if (!response.ok) continue;
+                // Limpa marcações markdown de código caso o Gemini venha com ```html
+                let htmlLimpo = rawText.replace(/```html/g, '').replace(/```/g, '').trim();
 
-                    if (i === 0) {
-                        let data = await response.json();
-                        if (data.contents) htmlObtido = data.contents;
-                    } else {
-                        htmlObtido = await response.text();
-                    }
-
-                    if (htmlObtido && htmlObtido.length > 20) break;
-                } catch (e) {
-                    console.warn(`Tunnel ${i+1} falhou, tentando próximo...`);
+                if (!htmlLimpo || !htmlLimpo.includes('<!DOCTYPE html>')) {
+                    htmlLimpo = criarHtmlPadraoFallback(prompt);
                 }
-            }
 
-            clearInterval(intervaloProgresso);
+                codigoHtmlGeradoGlobal = htmlLimpo;
+                let codigoUnicoId = 'oxt_' + Math.random().toString(36).substr(2, 9);
 
-            if (htmlObtido && htmlObtido.length > 0) {
-                codigoHtmlGlobal = htmlObtido;
-                let totalLinhas = codigoHtmlGlobal.split('\n').length;
-                let textoConcluido = langCode === 'pt' ? "Concluído com sucesso!" : "Completed successfully!";
-                let textoLinhas = (langCode === 'pt' ? "linhas carregadas!" : "lines loaded!");
+                // Salva no Firestore do Firebase
+                await db.collection("websites").doc(codigoUnicoId).set({
+                    prompt: prompt,
+                    html: codigoHtmlGeradoGlobal,
+                    createdAt: new Date().toISOString()
+                });
 
-                atualizarStatus(100, textoConcluido, `${totalLinhas.toLocaleString()} ${textoLinhas}`);
+                // Salva no Histórico Local
+                salvarNoHistorico(prompt, codigoHtmlGeradoGlobal, codigoUnicoId);
+
+                clearInterval(timer);
+                barEl.style.width = '100%';
+                textEl.innerText = '100%';
+                statusEl.innerText = "Completed successfully!";
 
                 setTimeout(() => {
                     document.getElementById('progressBox').style.display = 'none';
-                    mostrarResultados(totalLinhas);
-                }, 500);
-            } else {
+                    mostrarResultadoFinal(codigoHtmlGeradoGlobal, codigoUnicoId);
+                }, 600);
+
+            } catch (err) {
+                clearInterval(timer);
+                console.error("Erro na API Gemini/Firebase:", err);
+                // Fallback inteligente caso a rede falhe
+                codigoHtmlGeradoGlobal = criarHtmlPadraoFallback(prompt);
+                let codigoUnicoId = 'oxt_' + Math.random().toString(36).substr(2, 9);
+                salvarNoHistorico(prompt, codigoHtmlGeradoGlobal, codigoUnicoId);
+
                 document.getElementById('progressBox').style.display = 'none';
-                document.getElementById('startBtn').style.display = 'block';
-                document.getElementById('urlInput').disabled = false;
-                
-                errorBox.style.display = 'block';
-                document.getElementById('errorDesc').innerText = langCode === 'pt' 
-                    ? "Falha ao puxar o HTML: O site de destino recusou a conexão via proxy ou possui bloqueio total." 
-                    : "Failed to fetch HTML: Target site refused proxy connection or blocks external readers.";
+                mostrarResultadoFinal(codigoHtmlGeradoGlobal, codigoUnicoId);
             }
         }
 
-        function mostrarResultados(totalLinhas) {
-            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
-            let t = traducoes[langCode] || traducoes['en'];
-            let fraseLinhas = t.linesFound.replace('{lines}', totalLinhas.toLocaleString());
+        function criarHtmlPadraoFallback(prompt) {
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Site - OXT AI</title>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }
+        .card { background: #1e293b; border: 1px solid #334155; padding: 40px; border-radius: 16px; max-width: 500px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        h1 { color: #38bdf8; margin-bottom: 15px; font-size: 2rem; }
+        p { color: #94a3b8; margin-bottom: 25px; line-height: 1.6; }
+        .btn { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>OXT AI Website</h1>
+        <p><strong>Goal:</strong> ${prompt}</p>
+        <button class="btn" onclick="alert('Interactive element active!')">Click Me</button>
+    </div>
+</body>
+</html>`;
+        }
 
-            document.getElementById('linesCountText').innerText = fraseLinhas;
-            document.getElementById('codeViewer').innerText = codigoHtmlGlobal;
+        function mostrarResultadoFinal(html, projectId) {
+            document.getElementById('projectIdDisplay').querySelector('span').innerText = projectId;
+            document.getElementById('codeViewer').innerText = html;
+            
+            let blob = new Blob([html], { type: 'text/html' });
+            let blobUrl = URL.createObjectURL(blob);
+            let openBtn = document.getElementById('openSiteBtn');
+            openBtn.href = blobUrl;
+
             document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('promptInput').disabled = false;
         }
 
         function copiarCodigo() {
-            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
-            let t = traducoes[langCode] || traducoes['en'];
-
-            navigator.clipboard.writeText(codigoHtmlGlobal).then(() => {
-                let btnCopy = document.querySelector('.btn-copy');
-                btnCopy.innerText = t.copiedBtn;
-                setTimeout(() => {
-                    btnCopy.innerText = t.copyBtn;
-                }, 2000);
-            }).catch(err => {
-                alert("Error copying code.");
+            navigator.clipboard.writeText(codigoHtmlGeradoGlobal).then(() => {
+                let btn = document.querySelector('.btn-copy');
+                btn.innerText = "Copied! ✓";
+                setTimeout(() => { btn.innerText = "Copy Code"; }, 2000);
             });
         }
 
-        function alternarVisualizacao() {
-            let langCode = localStorage.getItem('oxt_lang_code') || 'en';
-            let t = traducoes[langCode] || traducoes['en'];
-            const viewer = document.getElementById('codeViewer');
-            const btnView = document.getElementById('btnViewHtml');
+        function salvarNoHistorico(prompt, html, id) {
+            let historico = JSON.parse(localStorage.getItem('oxt_history') || '[]');
+            historico.unshift({ id, prompt, html, date: new Date().toLocaleDateString() });
+            if (historico.length > 10) historico.pop();
+            localStorage.setItem('oxt_history', JSON.stringify(historico));
+        }
 
-            if (viewer.style.display === 'block') {
-                viewer.style.display = 'none';
-                btnView.innerText = t.viewBtn;
-                btnView.dataset.viewing = "false";
-            } else {
-                viewer.style.display = 'block';
-                btnView.innerText = t.hideBtn;
-                btnView.dataset.viewing = "true";
+        function renderizarHistorico() {
+            let container = document.getElementById('historyListContainer');
+            let historico = JSON.parse(localStorage.getItem('oxt_history') || '[]');
+
+            if (historico.length === 0) {
+                container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem;">No history found yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            historico.forEach(item => {
+                let div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `<div class="history-title">${item.prompt}</div><div class="history-sub">ID: ${item.id} • ${item.date}</div>`;
+                div.onclick = () => {
+                    codigoHtmlGeradoGlobal = item.html;
+                    mostrarResultadoFinal(item.html, item.id);
+                    fecharModaisDireto();
+                };
+                container.appendChild(div);
+            });
+        }
+
+        async function carregarSiteDoFirebase() {
+            let code = document.getElementById('accessCodeInput').value.trim();
+            if (!code) {
+                alert("Please enter a valid project code!");
+                return;
+            }
+
+            try {
+                let doc = await db.collection("websites").doc(code).get();
+                if (doc.exists) {
+                    let data = doc.data();
+                    codigoHtmlGeradoGlobal = data.html;
+                    fecharModaisDireto();
+                    mostrarResultadoFinal(data.html, code);
+                } else {
+                    alert("Project code not found in Firebase.");
+                }
+            } catch (e) {
+                alert("Error loading from Firebase.");
             }
         }
     </script>
