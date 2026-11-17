@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OXT - Inspetor de HTML</title>
+    <title>OXT - HTML Inspector</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -37,6 +36,90 @@
             padding: 20px;
         }
 
+        /* Tela de Seleção de Idioma (Language Picker Modal/Overlay) */
+        .language-overlay {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.95);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .language-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .language-card h2 {
+            margin-bottom: 8px;
+            color: var(--text-main);
+            font-size: 1.5rem;
+        }
+
+        .language-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .lang-search {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .lang-search:focus {
+            border-color: var(--primary);
+        }
+
+        .lang-list {
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            background-color: var(--bg-color);
+        }
+
+        .lang-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lang-item:hover {
+            background-color: var(--border);
+        }
+
+        /* Container Principal */
         .container {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
@@ -62,7 +145,6 @@
             letter-spacing: 1px;
         }
 
-        /* Botão / Tag Beta */
         .beta-badge {
             background-color: rgba(245, 158, 11, 0.15);
             border: 1px solid var(--beta-color);
@@ -80,12 +162,34 @@
             transform: scale(1.05);
         }
 
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
         .version {
             font-size: 0.85rem;
             color: var(--text-muted);
-            margin-bottom: 30px;
             text-transform: uppercase;
             letter-spacing: 2px;
+        }
+
+        .btn-change-lang {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-change-lang:hover {
+            border-color: var(--primary);
+            color: var(--text-main);
         }
 
         .input-group {
@@ -131,7 +235,6 @@
             transform: scale(0.98);
         }
 
-        /* Caixa de Progresso e Status */
         .progress-box {
             display: none;
             margin-top: 15px;
@@ -175,7 +278,6 @@
             margin-top: 8px;
         }
 
-        /* Log de Erro */
         .error-box {
             display: none;
             margin-top: 20px;
@@ -200,7 +302,6 @@
             word-break: break-all;
         }
 
-        /* Seção de Resultados */
         .result-section {
             display: none;
             margin-top: 25px;
@@ -257,7 +358,6 @@
             text-align: left;
         }
 
-        /* Modal do Beta */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -304,58 +404,115 @@
 </head>
 <body>
 
+    <!-- Seletor de Idiomas Inicial -->
+    <div class="language-overlay" id="languageOverlay">
+        <div class="language-card">
+            <h2>Select Language</h2>
+            <p>Choose your preferred language to continue:</p>
+            <input type="text" class="lang-search" id="langSearch" placeholder="Search language or country..." onkeyup="filtrarIdiomas()">
+            <div class="lang-list" id="langList">
+                <div class="lang-item" onclick="selecionarIdioma('English')"><span>🇺🇸 English</span><span>EN</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('Portuguese (Brazil)')"><span>🇧🇷 Portuguese (Brazil)</span><span>PT-BR</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('Spanish')"><span>🇪🇸 Spanish</span><span>ES</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('French')"><span>🇫🇷 French</span><span>FR</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('German')"><span>🇩🇪 German</span><span>DE</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('Italian')"><span>🇮🇹 Italian</span><span>IT</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('Japanese')"><span>🇯🇵 Japanese</span><span>JA</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('Korean')"><span>🇰🇷 Korean</span><span>KO</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('Chinese (Mandarin)')"><span>🇨🇳 Chinese (Mandarin)</span><span>ZH</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('Russian')"><span>🇷🇺 Russian</span><span>RU</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('Arabic')"><span>🇸🇦 Arabic</span><span>AR</span></div>
+                <div class="lang-item" onclick="selecionarIdioma('Hindi')"><span>🇮🇳 Hindi</span><span>HI</span></div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header-area">
             <h1>OXT</h1>
             <div class="beta-badge" onclick="abrirModalBeta()">Beta 1</div>
         </div>
-        <div class="version">Versão 1.0</div>
-
-        <div class="input-group" id="inputSection">
-            <input type="url" id="urlInput" placeholder="Digite o link do site (ex: https://exemplo.com)" required>
-            <button id="startBtn" onclick="iniciarExtracao()">Começar Inspeção</button>
+        <div class="top-bar">
+            <div class="version">Version 1.0</div>
+            <button class="btn-change-lang" onclick="abrirSeletorIdioma()">🌐 <span id="currentLangDisplay">English</span></button>
         </div>
 
-        <!-- Caixa de Progresso e Status em tempo real -->
+        <div class="input-group" id="inputSection">
+            <input type="url" id="urlInput" placeholder="Enter website link (e.g., https://example.com)" required>
+            <button id="startBtn" onclick="iniciarExtracao()">Start Inspection</button>
+        </div>
+
         <div class="progress-box" id="progressBox">
             <div class="progress-container">
                 <div class="progress-bar" id="progressBar"></div>
                 <div class="progress-text" id="progressText">0%</div>
             </div>
             <div class="status-details">
-                <span id="statusMessage">Iniciando requisição...</span>
-                <span id="timeLeft">Processando...</span>
+                <span id="statusMessage">Starting request...</span>
+                <span id="timeLeft">Processing...</span>
             </div>
         </div>
 
-        <!-- Log de Erro -->
         <div class="error-box" id="errorBox">
-            <div class="error-title">⚠️ Falha na Inspeção</div>
-            <div class="error-desc" id="errorDesc">Nenhum erro registrado.</div>
+            <div class="error-title">⚠️ Inspection Failed</div>
+            <div class="error-desc" id="errorDesc">No errors recorded.</div>
         </div>
 
-        <!-- Seção de Resultados -->
         <div class="result-section" id="resultSection">
-            <div class="lines-count" id="linesCountText">Linhas encontradas: 0</div>
+            <div class="lines-count" id="linesCountText">Lines found: 0</div>
             <div class="actions">
-                <button class="btn-copy" onclick="copiarCodigo()">Copiar Código</button>
-                <button class="btn-view" onclick="alternarVisualizacao()">Ver HTML Inteiro</button>
+                <button class="btn-copy" onclick="copiarCodigo()">Copy Code</button>
+                <button class="btn-view" onclick="alternarVisualizacao()">View Full HTML</button>
             </div>
             <div class="code-viewer" id="codeViewer"></div>
         </div>
     </div>
 
-    <!-- Janela Modal do Beta -->
     <div class="modal-overlay" id="betaModal" onclick="fecharModalBeta(event)">
         <div class="modal-card">
-            <h3>Informação da Versão Beta</h3>
-            <p>Esta é a versão <strong>Beta 1</strong> do OXT. Como o sistema está em fase de desenvolvimento ativo e processa códigos pesados (mesmo com mais de 10.000 linhas), você ainda pode encontrar alguns bugs visuais ou instabilidades dependendo do site inspecionado.</p>
-            <button onclick="fecharModalBetaDireto()">Entendido</button>
+            <h3>Beta Version Info</h3>
+            <p>This is version <strong>Beta 1</strong> of OXT. Because the system is under active development and handles heavy code structures (even 10,000+ lines), you may still encounter visual bugs or instability depending on the inspected site.</p>
+            <button onclick="fecharModalBetaDireto()">Understood</button>
         </div>
     </div>
 
     <script>
         let codigoHtmlGlobal = "";
+
+        // Gerenciamento de Idioma com localStorage
+        window.addEventListener('DOMContentLoaded', () => {
+            let idiomaSalvo = localStorage.getItem('oxt_lang');
+            if (idiomaSalvo) {
+                document.getElementById('languageOverlay').style.display = 'none';
+                document.getElementById('currentLangDisplay').innerText = idiomaSalvo;
+            } else {
+                document.getElementById('languageOverlay').style.display = 'flex';
+            }
+        });
+
+        function selecionarIdioma(idioma) {
+            localStorage.setItem('oxt_lang', idioma);
+            document.getElementById('currentLangDisplay').innerText = idioma;
+            document.getElementById('languageOverlay').style.display = 'none';
+        }
+
+        function abrirSeletorIdioma() {
+            document.getElementById('languageOverlay').style.display = 'flex';
+        }
+
+        function filtrarIdiomas() {
+            let filtro = document.getElementById('langSearch').value.toLowerCase();
+            let itens = document.getElementById('langList').getElementsByClassName('lang-item');
+            
+            for (let i = 0; i < itens.length; i++) {
+                let texto = itens[i].innerText.toLowerCase();
+                if (texto.includes(filtro)) {
+                    itens[i].style.display = "flex";
+                } else {
+                    itens[i].style.display = "none";
+                }
+            }
+        }
 
         function abrirModalBeta() {
             document.getElementById('betaModal').style.display = 'flex';
@@ -378,7 +535,7 @@
             document.getElementById('timeLeft').innerText = tempoRestante;
         }
 
-        function iniciarExtracao() {
+        async function iniciarExtracao() {
             let url = document.getElementById('urlInput').value.trim();
             const errorBox = document.getElementById('errorBox');
             const resultSection = document.getElementById('resultSection');
@@ -387,7 +544,7 @@
             resultSection.style.display = 'none';
 
             if (!url) {
-                alert("Por favor, digite um link válido!");
+                alert("Please enter a valid URL!");
                 return;
             }
 
@@ -395,71 +552,78 @@
                 url = 'https://' + url;
             }
 
-            // Esconde o botão e prepara a tela de progresso contínuo
             document.getElementById('startBtn').style.display = 'none';
             document.getElementById('urlInput').disabled = true;
             document.getElementById('progressBox').style.display = 'block';
 
             let progresso = 5;
-            atualizarStatus(progresso, "Conectando ao proxy de alta capacidade...", "Processando...");
+            atualizarStatus(progresso, "Connecting to main proxy...", "Please wait...");
 
-            // Barra avançando de forma fluida para suportar arquivos grandes sem travar em 90%
             let intervaloProgresso = setInterval(() => {
-                if (progresso < 95) {
-                    progresso += 2;
+                if (progresso < 90) {
+                    progresso += 3;
                     if (progresso === 20) {
-                        atualizarStatus(progresso, "Buscando estrutura de grande porte...", "Baixando blocos...");
+                        atualizarStatus(progresso, "Fetching data packets...", "Downloading...");
                     } else if (progresso === 50) {
-                        atualizarStatus(progresso, "Varrendo milhares de linhas e verificando integridade...", "Quase na metade...");
-                    } else if (progresso === 75) {
-                        atualizarStatus(progresso, "Organizando códigos e blocos extensos...", "Finalizando leitura...");
-                    } else if (progresso === 90) {
-                        atualizarStatus(progresso, "Quase pronto, compilando resultado...", "Aguarde...");
+                        atualizarStatus(progresso, "Scanning lines and checking integrity...", "Almost there...");
+                    } else if (progresso === 80) {
+                        atualizarStatus(progresso, "Structuring HTML code...", "Finishing...");
                     }
                 }
-            }, 120);
+            }, 100);
 
-            // Proxy otimizado para lidar com arquivos massivos
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+            let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
 
-            fetch(proxyUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Erro HTTP: ${response.status} - O servidor recusou ou bloqueou a requisição.`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    clearInterval(intervaloProgresso);
+            try {
+                let response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("Main proxy failed.");
+                let data = await response.json();
+                
+                if (!data.contents) throw new Error("Returned content is empty.");
+                codigoHtmlGlobal = data.contents;
+                sucessoExtracao(intervaloProgresso);
 
-                    if (!data.contents) {
-                        throw new Error("O conteúdo retornado está vazio ou o site possui forte proteção anti-bot.");
-                    }
+            } catch (errPrimary) {
+                atualizarStatus(45, "Switching to backup proxy...", "Retrying...");
+                
+                try {
+                    let proxyAltUrl = `https://thingproxy.freeboard.io/fetch/${url}`;
+                    let responseAlt = await fetch(proxyAltUrl);
+                    
+                    if (!responseAlt.ok) throw new Error(`HTTP Error: ${responseAlt.status} - Connection refused.`);
+                    
+                    codigoHtmlGlobal = await responseAlt.text();
+                    if (!codigoHtmlGlobal) throw new Error("No HTML content found.");
+                    
+                    sucessoExtracao(intervaloProgresso);
 
-                    codigoHtmlGlobal = data.contents;
-                    let totalLinhas = codigoHtmlGlobal.split('\n').length;
-
-                    atualizarStatus(100, "Concluído com sucesso!", `${totalLinhas.toLocaleString('pt-BR')} linhas carregadas!`);
-
-                    setTimeout(() => {
-                        document.getElementById('progressBox').style.display = 'none';
-                        mostrarResultados(totalLinhas);
-                    }, 500);
-                })
-                .catch(err => {
+                } catch (errFinal) {
                     clearInterval(intervaloProgresso);
                     document.getElementById('progressBox').style.display = 'none';
                     document.getElementById('startBtn').style.display = 'block';
                     document.getElementById('urlInput').disabled = false;
                     
                     errorBox.style.display = 'block';
-                    document.getElementById('errorDesc').innerText = err.message || "Erro desconhecido ao tentar capturar o link.";
-                    console.error(err);
-                });
+                    document.getElementById('errorDesc').innerText = `Failed to fetch: Target site blocked direct access or URL is invalid. (${errFinal.message})`;
+                    console.error(errFinal);
+                }
+            }
+        }
+
+        function sucessoExtracao(intervalo) {
+            clearInterval(intervalo);
+            let totalLinhas = codigoHtmlGlobal.split('\n').length;
+
+            atualizarStatus(100, "Completed successfully!", `${totalLinhas.toLocaleString('en-US')} lines loaded!`);
+
+            setTimeout(() => {
+                document.getElementById('progressBox').style.display = 'none';
+                mostrarResultados(totalLinhas);
+            }, 500);
         }
 
         function mostrarResultados(totalLinhas) {
-            document.getElementById('linesCountText').innerText = `O código possui ${totalLinhas.toLocaleString('pt-BR')} linhas.`;
+            document.getElementById('linesCountText').innerText = `The code has ${totalLinhas.toLocaleString('en-US')} lines.`;
             document.getElementById('codeViewer').innerText = codigoHtmlGlobal;
             document.getElementById('resultSection').style.display = 'block';
         }
@@ -467,12 +631,12 @@
         function copiarCodigo() {
             navigator.clipboard.writeText(codigoHtmlGlobal).then(() => {
                 const btnCopy = document.querySelector('.btn-copy');
-                btnCopy.innerText = "Copiado! ✓";
+                btnCopy.innerText = "Copied! ✓";
                 setTimeout(() => {
-                    btnCopy.innerText = "Copiar Código";
+                    btnCopy.innerText = "Copy Code";
                 }, 2000);
             }).catch(err => {
-                alert("Erro ao copiar o código.");
+                alert("Error copying code.");
             });
         }
 
@@ -482,10 +646,10 @@
 
             if (viewer.style.display === 'block') {
                 viewer.style.display = 'none';
-                btnView.innerText = "Ver HTML Inteiro";
+                btnView.innerText = "View Full HTML";
             } else {
                 viewer.style.display = 'block';
-                btnView.innerText = "Esconder HTML";
+                btnView.innerText = "Hide HTML";
             }
         }
     </script>
