@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OXT AI - Website Creator</title>
-    <!-- Firebase SDKs -->
+    <title>OXT AI - Chat Website Creator</title>
+    <!-- Firebase SDKs (Compat v9) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -36,11 +36,11 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 15px;
         }
 
-        /* Language Picker Modal */
-        .language-overlay {
+        /* Tela de Autenticação (Login / Cadastro com Nome e Senha) */
+        .auth-overlay {
             display: flex;
             position: fixed;
             top: 0;
@@ -48,36 +48,36 @@
             width: 100%;
             height: 100%;
             background-color: rgba(15, 23, 42, 0.95);
-            z-index: 2000;
+            z-index: 3000;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
 
-        .language-card {
+        .auth-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 30px;
             width: 100%;
-            max-width: 450px;
+            max-width: 400px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
 
-        .language-card h2 {
+        .auth-card h2 {
             margin-bottom: 8px;
             color: var(--text-main);
             font-size: 1.5rem;
         }
 
-        .language-card p {
+        .auth-card p {
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin-bottom: 20px;
         }
 
-        .lang-search {
+        .auth-input {
             width: 100%;
             padding: 12px 16px;
             background-color: var(--bg-color);
@@ -86,442 +86,219 @@
             color: var(--text-main);
             font-size: 0.95rem;
             outline: none;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
-        .lang-list {
-            max-height: 220px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            text-align: left;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px;
-            background-color: var(--bg-color);
-        }
-
-        .lang-item {
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-size: 0.95rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .lang-item:hover {
-            background-color: var(--border);
+        .auth-input:focus {
+            border-color: var(--primary);
         }
 
         .container {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 30px;
+            padding: 20px;
             width: 100%;
-            max-width: 650px;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            text-align: center;
         }
 
         .header-area {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: var(--text-main);
-            letter-spacing: 1px;
         }
 
-        .beta-badge {
-            background-color: rgba(245, 158, 11, 0.15);
-            border: 1px solid var(--beta-color);
-            color: var(--beta-color);
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-
-        .beta-badge:hover {
-            background-color: rgba(245, 158, 11, 0.3);
-            transform: scale(1.05);
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .version {
+        .user-info {
             font-size: 0.85rem;
             color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .btn-header-group {
             display: flex;
-            gap: 8px;
+            align-items: center;
+            gap: 10px;
         }
 
-        .btn-small {
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 5px 10px;
-            border-radius: 8px;
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 4px 10px;
+            border-radius: 6px;
             font-size: 0.75rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.2s;
         }
 
-        .btn-small:hover {
-            border-color: var(--primary);
-            color: var(--text-main);
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.3);
         }
 
-        .input-group {
+        /* Área de Chat (Conversa estilo IA) */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            margin-bottom: 20px;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        /* Mensagem do Usuário (Direita) */
+        .message.user {
+            background-color: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        /* Mensagem da OXT AI (Esquerda) */
+        .message.ai {
+            background-color: #334155;
+            color: var(--text-main);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .code-snippet {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 8px;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .chat-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .chat-btn:hover { background: var(--primary-hover); }
+
+        .chat-btn-success { background: var(--success); }
+        .chat-btn-success:hover { background: #16a34a; }
+
+        /* Barra de Input de Envio */
+        .input-chat-box {
+            display: flex;
+            gap: 10px;
         }
 
         textarea {
-            width: 100%;
-            padding: 14px 18px;
+            flex: 1;
+            padding: 12px 15px;
             background-color: var(--bg-color);
             border: 1px solid var(--border);
             border-radius: 10px;
             color: var(--text-main);
-            font-size: 1rem;
+            font-size: 0.95rem;
             outline: none;
-            resize: vertical;
-            min-height: 100px;
-            transition: border-color 0.2s;
+            resize: none;
+            height: 50px;
         }
 
-        textarea:focus {
-            border-color: var(--primary);
-        }
+        textarea:focus { border-color: var(--primary); }
 
-        button {
+        button.send-btn {
             background-color: var(--primary);
             color: white;
             border: none;
             border-radius: 10px;
-            padding: 14px;
-            font-size: 1rem;
+            padding: 0 20px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
+            transition: background 0.2s;
         }
-
-        button:hover {
-            background-color: var(--primary-hover);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        /* Barra de Progresso */
-        .progress-box {
-            display: none;
-            margin-top: 15px;
-            text-align: left;
-        }
-
-        .progress-container {
-            width: 100%;
-            background-color: var(--bg-color);
-            border-radius: 10px;
-            overflow: hidden;
-            height: 20px;
-            border: 1px solid var(--border);
-            position: relative;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background-color: var(--primary);
-            transition: width 0.2s ease;
-        }
-
-        .progress-text {
-            position: absolute;
-            width: 100%;
-            top: 0;
-            left: 0;
-            font-size: 0.75rem;
-            line-height: 20px;
-            color: white;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .status-details {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 10px;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        /* Seção de Resultados */
-        .result-section {
-            display: none;
-            margin-top: 25px;
-            text-align: left;
-            animation: fadeIn 0.4s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .project-id-display {
-            font-size: 0.85rem;
-            color: var(--success);
-            margin-bottom: 12px;
-            background: rgba(34, 197, 94, 0.1);
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(34, 197, 94, 0.3);
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .btn-open {
-            background-color: var(--success);
-            flex: 1;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-open:hover {
-            background-color: #16a34a;
-        }
-
-        .btn-copy {
-            background-color: var(--primary);
-            flex: 1;
-        }
-
-        .code-viewer {
-            background-color: var(--bg-color);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 15px;
-            max-height: 250px;
-            overflow-y: auto;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.85rem;
-            color: #38bdf8;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        /* Modais */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 25px;
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-            animation: scaleIn 0.3s ease-in-out;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        @keyframes scaleIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .modal-card h3 {
-            color: var(--text-main);
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-        }
-
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            text-align: left;
-            margin-bottom: 15px;
-        }
-
-        .history-item {
-            background-color: var(--bg-color);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-
-        .history-item:hover {
-            border-color: var(--primary);
-        }
-
-        .history-title {
-            font-weight: bold;
-            font-size: 0.95rem;
-            color: var(--text-main);
-            margin-bottom: 4px;
-        }
-
-        .history-sub {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .access-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .access-box input {
-            flex: 1;
-            padding: 10px;
-            background: var(--bg-color);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: white;
-            outline: none;
-        }
+        button.send-btn:hover { background-color: var(--primary-hover); }
     </style>
 </head>
 <body>
 
-    <!-- Language Selector Overlay -->
-    <div class="language-overlay" id="languageOverlay">
-        <div class="language-card">
-            <h2>Select Language</h2>
-            <p>Choose your preferred language to continue:</p>
-            <input type="text" class="lang-search" id="langSearch" placeholder="Search language..." onkeyup="filtrarIdiomas()">
-            <div class="lang-list" id="langList">
-                <div class="lang-item" onclick="selecionarIdioma('en', 'English')"><span>🇺🇸 English</span><span>EN</span></div>
-                <div class="lang-item" onclick="selecionarIdioma('pt', 'Portuguese (Brazil)')"><span>🇧🇷 Portuguese (Brazil)</span><span>PT-BR</span></div>
-            </div>
+    <!-- Tela de Login / Cadastro Automático -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-card">
+            <h2>OXT AI Account</h2>
+            <p>Enter your username and password to log in or create your account automatically:</p>
+            <input type="text" class="auth-input" id="usernameInput" placeholder="Username">
+            <input type="password" class="auth-input" id="passwordInput" placeholder="Password">
+            <button onclick="autenticarUsuario()" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer;">Continue</button>
         </div>
     </div>
 
     <div class="container">
         <div class="header-area">
-            <h1>OXT AI</h1>
-            <div class="beta-badge" onclick="abrirModalBeta()">Beta 1</div>
-        </div>
-        <div class="top-bar">
-            <div class="version">AI Website Creator</div>
-            <div class="btn-header-group">
-                <button class="btn-small" onclick="abrirHistorico()">📜 History</button>
-                <button class="btn-small" onclick="abrirModalAcesso()">🔑 Access Code</button>
-                <button class="btn-small" onclick="abrirSeletorIdioma()">🌐 <span id="currentLangDisplay">EN</span></button>
+            <div class="logo-area">
+                <h1>OXT AI</h1>
+            </div>
+            <div class="user-info">
+                <span>User: <strong id="displayUser"></strong></span>
+                <button class="btn-logout" onclick="fazerLogout()">Logout</button>
             </div>
         </div>
 
-        <!-- Área de Comando para a IA Criar o Site -->
-        <div class="input-group" id="inputSection">
-            <textarea id="promptInput" placeholder="Describe the website you want OXT AI to create (e.g., Create a website named My First Site with a button)..."></textarea>
-            <button id="startBtn" onclick="gerarSiteComIA()">Generate Website</button>
-        </div>
-
-        <!-- Barra de Progresso e Status -->
-        <div class="progress-box" id="progressBox">
-            <div class="progress-container">
-                <div class="progress-bar" id="progressBar"></div>
-                <div class="progress-text" id="progressText">0%</div>
+        <!-- Janela de Conversa (Chat Interface) -->
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai">
+                Hello! I am OXT AI. Tell me what website you want me to create, and I will code it instantly for you.
             </div>
-            <div class="status-details" id="statusMessage">I am creating your website...</div>
         </div>
 
-        <!-- Seção de Resultados -->
-        <div class="result-section" id="resultSection">
-            <div class="project-id-display" id="projectIdDisplay">Project Saved ID: <span></span></div>
-            <div class="actions">
-                <a href="#" id="openSiteBtn" class="btn-open" target="_blank">Open Website</a>
-                <button class="btn-copy" onclick="copiarCodigo()">Copy Code</button>
-            </div>
-            <div class="code-viewer" id="codeViewer"></div>
-        </div>
-    </div>
-
-    <!-- Modal Histórico -->
-    <div class="modal-overlay" id="historyModal" onclick="fecharModais(event)">
-        <div class="modal-card">
-            <h3>Generation History</h3>
-            <div class="history-list" id="historyListContainer">
-                <p style="color: var(--text-muted); font-size: 0.9rem;">No history found yet.</p>
-            </div>
-            <button onclick="fecharModaisDireto()">Close</button>
-        </div>
-    </div>
-
-    <!-- Modal Acessar por Código -->
-    <div class="modal-overlay" id="accessModal" onclick="fecharModais(event)">
-        <div class="modal-card">
-            <h3>Access Website by Code</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Enter the unique project code saved in Firebase:</p>
-            <div class="access-box">
-                <input type="text" id="accessCodeInput" placeholder="Paste project code here...">
-                <button onclick="carregarSiteDoFirebase()" style="padding: 10px 15px;">Load</button>
-            </div>
-            <button onclick="fecharModaisDireto()" style="background: #334155; width: 100%;">Close</button>
-        </div>
-    </div>
-
-    <!-- Modal Beta -->
-    <div class="modal-overlay" id="betaModal" onclick="fecharModais(event)">
-        <div class="modal-card">
-            <h3>OXT AI Beta Info</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">OXT AI is strictly a professional Website Creator powered by Google Gemini and Firebase. All irrelevant inputs are automatically converted into site creation prompts.</p>
-            <button onclick="fecharModaisDireto()">Understood</button>
+        <!-- Input de Mensagem -->
+        <div class="input-chat-box">
+            <textarea id="promptInput" placeholder="Type what website you want to create..." onkeydown="checarEnter(event)"></textarea>
+            <button class="send-btn" onclick="enviarMensagem()">Send</button>
         </div>
     </div>
 
     <script>
-        // FIREBASE CONFIG CONECTADO
+        // CONFIGURAÇÃO DO FIREBASE REALTIME DATABASE
         const firebaseConfig = {
             apiKey: "AIzaSyBJf2YuT_MTutaIQD1538aewftKj_hr_rQ",
             authDomain: "radio-43909.firebaseapp.com",
@@ -534,77 +311,79 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const rtdb = firebase.database();
 
-        // SUA API DO GEMINI
         const GEMINI_API_KEY = "AQ.Ab8RN6Ki0P7LukRelWJptkvqZ5VaaxDIytSwG_k0_3FYE_TNwQ";
+        let usuarioAtual = localStorage.getItem('oxt_username') || null;
 
-        let codigoHtmlGeradoGlobal = "";
-
-        function selecionarIdioma(code, name) {
-            localStorage.setItem('oxt_lang', code);
-            document.getElementById('currentLangDisplay').innerText = code.toUpperCase();
-            document.getElementById('languageOverlay').style.display = 'none';
-        }
-
+        // Gerenciamento de Autenticação Simples (Nome e Senha)
         window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('oxt_lang')) {
-                document.getElementById('languageOverlay').style.display = 'none';
+            if (usuarioAtual) {
+                document.getElementById('authOverlay').style.display = 'none';
+                document.getElementById('displayUser').innerText = usuarioAtual;
+                carregarHistoricoDoFirebase(usuarioAtual);
+            } else {
+                document.getElementById('authOverlay').style.display = 'flex';
             }
         });
 
-        function abrirSeletorIdioma() { document.getElementById('languageOverlay').style.display = 'flex'; }
-        function abrirModalBeta() { document.getElementById('betaModal').style.display = 'flex'; }
-        function abrirHistorico() {
-            renderizarHistorico();
-            document.getElementById('historyModal').style.display = 'flex';
-        }
-        function abrirModalAcesso() { document.getElementById('accessModal').style.display = 'flex'; }
-        
-        function fecharModais(e) {
-            if (e.target.classList.contains('modal-overlay')) {
-                e.target.style.display = 'none';
-            }
-        }
-        function fecharModaisDireto() {
-            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
-        }
+        async function autenticarUsuario() {
+            let user = document.getElementById('usernameInput').value.trim().toLowerCase();
+            let pass = document.getElementById('passwordInput').value.trim();
 
-        // Motor IA do OXT AI com blindagem contra spam/conversas e integração Gemini
-        async function gerarSiteComIA() {
-            let prompt = document.getElementById('promptInput').value.trim();
-            if (!prompt) {
-                alert("Please type what website you want OXT AI to create!");
+            if (!user || !pass) {
+                alert("Please enter both username and password!");
                 return;
             }
 
-            document.getElementById('startBtn').style.display = 'none';
-            document.getElementById('promptInput').disabled = true;
-            document.getElementById('progressBox').style.display = 'block';
-            document.getElementById('resultSection').style.display = 'none';
-
-            let progresso = 0;
-            let statusEl = document.getElementById('statusMessage');
-            let barEl = document.getElementById('progressBar');
-            let textEl = document.getElementById('progressText');
-
-            statusEl.innerText = "I am creating your website...";
-
-            let timer = setInterval(() => {
-                if (progresso < 95) {
-                    progresso += 5;
-                    barEl.style.width = progresso + '%';
-                    textEl.innerText = progresso + '%';
-
-                    if (progresso === 30) statusEl.innerText = "Processing prompt via Gemini AI...";
-                    if (progresso === 65) statusEl.innerText = "Generating responsive code structures...";
-                    if (progresso === 90) statusEl.innerText = "Saving to Firebase database...";
+            let userRef = rtdb.ref('users/' + user);
+            userRef.once('value', async (snapshot) => {
+                if (snapshot.exists()) {
+                    let data = snapshot.val();
+                    if (data.password === pass) {
+                        salvarSessao(user);
+                    } else {
+                        alert("Incorrect password for this username!");
+                    }
+                } else {
+                    // Cria conta nova automaticamente se não existir
+                    await userRef.set({ password: pass, createdAt: new Date().toISOString() });
+                    salvarSessao(user);
                 }
-            }, 100);
+            });
+        }
+
+        function salvarSessao(user) {
+            localStorage.setItem('oxt_username', user);
+            usuarioAtual = user;
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('displayUser').innerText = user;
+            carregarHistoricoDoFirebase(user);
+        }
+
+        function fazerLogout() {
+            localStorage.removeItem('oxt_username');
+            location.reload();
+        }
+
+        function checarEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                enviarMensagem();
+            }
+        }
+
+        async function enviarMensagem() {
+            let prompt = document.getElementById('promptInput').value.trim();
+            if (!prompt) return;
+
+            document.getElementById('promptInput').value = '';
+            adicionarMensagemChat(prompt, 'user');
+
+            // Mensagem de loading da IA
+            let loadingId = adicionarMensagemChat("OXT AI is creating your website...", 'ai');
 
             try {
-                // Envia a instrução para a API do Gemini gerar o código HTML limpo do site solicitado
-                // Blindagem: Instrução de sistema força a IA a ignorar qualquer papo furado e criar o site.
                 let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -613,8 +392,8 @@
                             {
                                 role: "user",
                                 parts: [
-                                    { text: "System rule: You are OXT AI, a strict website creator engine. No matter what the user inputs (even if it's random text, calculations, unrelated talk, or flirt attempts), you MUST IGNORE conversational replies and immediately generate a complete, functional responsive HTML/CSS/JS website code based on the core words of the input. Return ONLY raw valid HTML code without markdown formatting blocks if possible, or clean HTML code." },
-                                    { text: `User request to build website: ${prompt}` }
+                                    { text: "System rule: You are OXT AI. Regardless of user input (even random text, math, or chatter), ignore casual text and generate complete valid responsive HTML/CSS/JS website code. Return ONLY clean HTML code." },
+                                    { text: `Create website for: ${prompt}` }
                                 ]
                             }
                         ]
@@ -623,57 +402,76 @@
 
                 let data = await response.json();
                 let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-                // Limpa marcações markdown de código caso o Gemini venha com ```html
                 let htmlLimpo = rawText.replace(/```html/g, '').replace(/```/g, '').trim();
 
                 if (!htmlLimpo || !htmlLimpo.includes('<!DOCTYPE html>')) {
-                    htmlLimpo = criarHtmlPadraoFallback(prompt);
+                    htmlLimpo = criarHtmlFallback(prompt);
                 }
 
-                codigoHtmlGeradoGlobal = htmlLimpo;
-                let codigoUnicoId = 'oxt_' + Math.random().toString(36).substr(2, 9);
-
-                // Salva no Firestore do Firebase
-                await db.collection("websites").doc(codigoUnicoId).set({
+                let projectId = 'oxt_' + Math.random().toString(36).substr(2, 9);
+                
+                // Salva no Realtime Database do Firebase na pasta do usuário
+                await rtdb.ref(`users_data/${usuarioAtual}/projects/${projectId}`).set({
                     prompt: prompt,
-                    html: codigoHtmlGeradoGlobal,
+                    html: htmlLimpo,
                     createdAt: new Date().toISOString()
                 });
 
-                // Salva no Histórico Local
-                salvarNoHistorico(prompt, codigoHtmlGeradoGlobal, codigoUnicoId);
-
-                clearInterval(timer);
-                barEl.style.width = '100%';
-                textEl.innerText = '100%';
-                statusEl.innerText = "Completed successfully!";
-
-                setTimeout(() => {
-                    document.getElementById('progressBox').style.display = 'none';
-                    mostrarResultadoFinal(codigoHtmlGeradoGlobal, codigoUnicoId);
-                }, 600);
+                atualizarMensagemAI(loadingId, prompt, htmlLimpo, projectId);
 
             } catch (err) {
-                clearInterval(timer);
-                console.error("Erro na API Gemini/Firebase:", err);
-                // Fallback inteligente caso a rede falhe
-                codigoHtmlGeradoGlobal = criarHtmlPadraoFallback(prompt);
-                let codigoUnicoId = 'oxt_' + Math.random().toString(36).substr(2, 9);
-                salvarNoHistorico(prompt, codigoHtmlGeradoGlobal, codigoUnicoId);
+                console.error(err);
+                let htmlLimpo = criarHtmlFallback(prompt);
+                let projectId = 'oxt_' + Math.random().toString(36).substr(2, 9);
+                
+                await rtdb.ref(`users_data/${usuarioAtual}/projects/${projectId}`).set({
+                    prompt: prompt,
+                    html: htmlLimpo,
+                    createdAt: new Date().toISOString()
+                });
 
-                document.getElementById('progressBox').style.display = 'none';
-                mostrarResultadoFinal(codigoHtmlGeradoGlobal, codigoUnicoId);
+                atualizarMensagemAI(loadingId, prompt, htmlLimpo, projectId);
             }
         }
 
-        function criarHtmlPadraoFallback(prompt) {
+        function adicionarMensagemChat(texto, remetente) {
+            let chat = document.getElementById('chatContainer');
+            let div = document.createElement('div');
+            let msgId = 'msg_' + Math.random().toString(36).substr(2, 9);
+            div.id = msgId;
+            div.className = `message ${remetente}`;
+            div.innerText = texto;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+            return msgId;
+        }
+
+        function atualizarMensagemAI(msgId, prompt, html, projectId) {
+            let msgEl = document.getElementById(msgId);
+            if (!msgEl) return;
+
+            let blob = new Blob([html], { type: 'text/html' });
+            let blobUrl = URL.createObjectURL(blob);
+
+            msgEl.innerHTML = `
+                Website created successfully for: <strong>${prompt}</strong>
+                <div class="code-snippet">${escapeHtml(html)}</div>
+                <div class="chat-actions">
+                    <a href="${blobUrl}" class="chat-btn chat-btn-success" target="_blank">Open Website</a>
+                    <button class="chat-btn" onclick="copiarTexto(this, \`${btoa(encodeURIComponent(html))}\`)">Copy Code</button>
+                </div>
+            `;
+            let chat = document.getElementById('chatContainer');
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function criarHtmlFallback(prompt) {
             return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated Site - OXT AI</title>
+    <title>OXT AI Site</title>
     <style>
         body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }
         .card { background: #1e293b; border: 1px solid #334155; padding: 40px; border-radius: 16px; max-width: 500px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
@@ -692,78 +490,34 @@
 </html>`;
         }
 
-        function mostrarResultadoFinal(html, projectId) {
-            document.getElementById('projectIdDisplay').querySelector('span').innerText = projectId;
-            document.getElementById('codeViewer').innerText = html;
-            
-            let blob = new Blob([html], { type: 'text/html' });
-            let blobUrl = URL.createObjectURL(blob);
-            let openBtn = document.getElementById('openSiteBtn');
-            openBtn.href = blobUrl;
-
-            document.getElementById('resultSection').style.display = 'block';
-            document.getElementById('startBtn').style.display = 'block';
-            document.getElementById('promptInput').disabled = false;
-        }
-
-        function copiarCodigo() {
-            navigator.clipboard.writeText(codigoHtmlGeradoGlobal).then(() => {
-                let btn = document.querySelector('.btn-copy');
-                btn.innerText = "Copied! ✓";
-                setTimeout(() => { btn.innerText = "Copy Code"; }, 2000);
-            });
-        }
-
-        function salvarNoHistorico(prompt, html, id) {
-            let historico = JSON.parse(localStorage.getItem('oxt_history') || '[]');
-            historico.unshift({ id, prompt, html, date: new Date().toLocaleDateString() });
-            if (historico.length > 10) historico.pop();
-            localStorage.setItem('oxt_history', JSON.stringify(historico));
-        }
-
-        function renderizarHistorico() {
-            let container = document.getElementById('historyListContainer');
-            let historico = JSON.parse(localStorage.getItem('oxt_history') || '[]');
-
-            if (historico.length === 0) {
-                container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem;">No history found yet.</p>`;
-                return;
-            }
-
-            container.innerHTML = '';
-            historico.forEach(item => {
-                let div = document.createElement('div');
-                div.className = 'history-item';
-                div.innerHTML = `<div class="history-title">${item.prompt}</div><div class="history-sub">ID: ${item.id} • ${item.date}</div>`;
-                div.onclick = () => {
-                    codigoHtmlGeradoGlobal = item.html;
-                    mostrarResultadoFinal(item.html, item.id);
-                    fecharModaisDireto();
-                };
-                container.appendChild(div);
-            });
-        }
-
-        async function carregarSiteDoFirebase() {
-            let code = document.getElementById('accessCodeInput').value.trim();
-            if (!code) {
-                alert("Please enter a valid project code!");
-                return;
-            }
-
-            try {
-                let doc = await db.collection("websites").doc(code).get();
-                if (doc.exists) {
-                    let data = doc.data();
-                    codigoHtmlGeradoGlobal = data.html;
-                    fecharModaisDireto();
-                    mostrarResultadoFinal(data.html, code);
-                } else {
-                    alert("Project code not found in Firebase.");
+        function carregarHistoricoDoFirebase(user) {
+            rtdb.ref(`users_data/${user}/projects`).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    let projetos = snapshot.val();
+                    Object.keys(projetos).forEach(id => {
+                        let p = projetos[id];
+                        let msgId = adicionarMensagemChat(`Website created for: ${p.prompt}`, 'ai');
+                        atualizarMensagemAI(msgId, p.prompt, p.html, id);
+                    });
                 }
-            } catch (e) {
-                alert("Error loading from Firebase.");
-            }
+            });
+        }
+
+        function copiarFirestoreCode(btn, encodedHtml) {
+            let html = decodeURIComponent(atob(encodedHtml));
+            navigator.clipboard.writeText(html).then(() => {
+                let original = btn.innerText;
+                btn.innerText = "Copied! ✓";
+                setTimeout(() => { btn.innerText = original; }, 2000);
+            });
+        }
+        
+        function copiarTexto(btn, encodedHtml) {
+            copiarFirestoreCode(btn, encodedHtml);
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
     </script>
 </body>
